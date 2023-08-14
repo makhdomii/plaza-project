@@ -3,10 +3,11 @@ import React, { FormEvent, useState } from 'react';
 // import WebSocket from 'ws';
 import logo from '../assets/logo.png';
 import playIc from '../assets/play.svg';
-import pauseIc from '../assets/pause.svg';
+import stopIc from '../assets/stop.svg';
 function OperatorApp() {
-  const [message, setMessage] = useState('');
-  const [countdownDuration, setCountdownDuration] = useState(0);
+  console.log('render');
+  // const [message, setMessage] = useState('');
+  // const [countdownDuration, setCountdownDuration] = useState(0);
   const [clientList, setClientList] = useState([]);
   const ws = new WebSocket('ws://localhost:4040');
   ws.onopen = () => {
@@ -30,7 +31,7 @@ function OperatorApp() {
       user: user.value,
     };
     ws.send(JSON.stringify(messageObj));
-    setMessage('');
+    // setMessage('');
   };
 
   const startCountdown = (e: FormEvent<EventTarget>, id: string) => {
@@ -45,14 +46,15 @@ function OperatorApp() {
     ws.send(JSON.stringify(countdownObj));
   };
 
-  const pauseCountdown = (id: number) => {
-    if (countdownDuration > 0) {
-      const countdownObj = {
-        type: 'pauseCountdown',
-        user: id,
-      };
-      ws.send(JSON.stringify(countdownObj));
-    }
+  const stopCountdown = (id: string) => {
+    // if (countdownDuration > 0) {
+    const countdownObj = {
+      type: 'stopCountdown',
+      user: id,
+    };
+    console.log('stop count down from operator', countdownObj);
+    ws.send(JSON.stringify(countdownObj));
+    // }
   };
   console.log('clients ===> ', clientList);
   return (
@@ -94,10 +96,10 @@ function OperatorApp() {
                       className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2"
                       type="button"
                       onClick={() => {
-                        pauseCountdown(index + 1);
+                        stopCountdown(item);
                       }}
                     >
-                      <img src={pauseIc} className="w-5" />
+                      <img src={stopIc} className="w-5" />
                     </button>
                   </div>
                 </div>

@@ -15,6 +15,7 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message: string) => {
     const parsedMessage = JSON.parse(message);
+    console.log(parsedMessage);
     if (parsedMessage.type === 'clientList') {
       let list = [];
       Object.keys(clients).forEach((element) => {
@@ -47,13 +48,20 @@ wss.on('connection', (ws) => {
           clientId: clientId,
         })
       );
-    } else if (parsedMessage.type === 'startCountdown') {
+    }
+    if (parsedMessage.type === 'startCountdown') {
       const duration = parsedMessage.duration;
       startCountdown(duration, parsedMessage.user);
-    } else if (parsedMessage.type === 'operatorMessage') {
+    }
+    if (parsedMessage.type === 'operatorMessage') {
       const message = parsedMessage.message;
       sendMessageToClient(parsedMessage.user, message);
-    } else if (parsedMessage.type === 'setCountdown') {
+    }
+    if (parsedMessage.type === 'stopCountdown') {
+      console.log('stop count down' + parsedMessage.user);
+      stopCountdown(parsedMessage.user);
+    }
+    if (parsedMessage.type === 'setCountdown') {
       const duration = parsedMessage.duration;
       setCountdownForClient(parsedMessage.targetClient, duration);
     }
@@ -76,7 +84,9 @@ server.listen(port, () => {
 function generateClientId() {
   return Math.random().toString(36).substr(2, 8);
 }
-
+function pauseCountdown(clientId, duration) {
+  clearInterval(clients[clientId].countdownInterval);
+}
 function startCountdown(duration, clientId) {
   stopCountdown(clientId);
   console.log(clientId);
