@@ -1,0 +1,26 @@
+.answer-box {
+  text-align: right;
+  width: 49.5%;
+  p {
+    font-size: 72px;
+  }
+  &-numbers {
+    display: flex;
+    justify-content: space-around;
+    border: 1px solid black;
+  }
+  &-red {
+    padding: 10px 0;
+    text-align: center;
+    width: 50%;
+    background: #f31559;
+    color: white;
+  }
+  &-blue {
+    padding: 10px 0;
+    text-align: center;
+    width: 50%;
+    background: #1d5d9b;
+    color: white;
+  }
+}
