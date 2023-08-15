@@ -1,27 +1,42 @@
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 // import './App.css';
 // import WebSocket from 'ws';
 import logo from '../assets/logo.png';
 import playIc from '../assets/play.svg';
 import stopIc from '../assets/stop.svg';
+const ws = new WebSocket('ws://localhost:4040');
 function OperatorApp() {
   console.log('render');
-  // const [message, setMessage] = useState('');
+  const [clientDetail, setClientDetail] = useState({
+    remainingTime: '0',
+    clientId: '',
+  });
   // const [countdownDuration, setCountdownDuration] = useState(0);
   const [clientList, setClientList] = useState([]);
-  const ws = new WebSocket('ws://localhost:4040');
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'registerOperator' }));
-  };
-  ws.onmessage = (event) => {
-    console.log(event.data);
-    const parsed = JSON.parse(event.data);
-    if (parsed.type === 'clientList') {
-      const clients = parsed.list;
-      console.log(clients);
-      setClientList(clients);
-    }
-  };
+
+  useEffect(() => {
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'registerOperator' }));
+    };
+    ws.onmessage = (event) => {
+      console.log(event.data);
+      const parsed = JSON.parse(event.data);
+      if (parsed.type === 'clientList') {
+        const clients = parsed.list;
+        console.log(clients);
+        setClientList(clients);
+      }
+      if (parsed.type === 'countdown') {
+        setClientDetail({
+          clientId: parsed.clientId,
+          remainingTime: formatTime(Number(parsed.remainingTime)),
+        });
+      }
+    };
+    () => {
+      ws.close();
+    };
+  });
   const sendMessage = (e: FormEvent<EventTarget>) => {
     e.preventDefault();
     const { textBox, user } = e.currentTarget;
@@ -33,7 +48,15 @@ function OperatorApp() {
     ws.send(JSON.stringify(messageObj));
     // setMessage('');
   };
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
 
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+  };
   const startCountdown = (e: FormEvent<EventTarget>, id: string) => {
     e.preventDefault();
     const { minutes, seconds } = e.currentTarget;
@@ -47,16 +70,14 @@ function OperatorApp() {
   };
 
   const stopCountdown = (id: string) => {
-    // if (countdownDuration > 0) {
     const countdownObj = {
       type: 'stopCountdown',
       user: id,
     };
     console.log('stop count down from operator', countdownObj);
     ws.send(JSON.stringify(countdownObj));
-    // }
   };
-  console.log('clients ===> ', clientList);
+  console.log('clients ===> ', clientDetail);
   return (
     <div className="text-right flex">
       <div className="w-1/4 bg-[#017338] h-screen flex flex-col justify-center">
@@ -70,7 +91,12 @@ function OperatorApp() {
         {clientList.map((item, index) => {
           return (
             <div key={'client_list' + index} className="py-5 px-8 border-b">
-              <p className="text-[#fff] text-lg">کاربر شماره {index + 1}</p>
+              <div className="flex justify-between items-center text-[#fff]">
+                <p className="font-bold text-lg">کاربر شماره {index + 1}</p>
+                {clientDetail.clientId === item && (
+                  <span>{clientDetail.remainingTime}</span>
+                )}
+              </div>
               <form onSubmit={(e) => startCountdown(e, item)}>
                 <div className="flex relative items-center">
                   <input

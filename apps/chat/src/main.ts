@@ -9,6 +9,7 @@ const wss = new WebSocket.Server({ server });
 const port = process.env.CHATPORT ? Number(process.env.CHATPORT) : 4040;
 app.use(cors());
 const clients = {};
+const operator = {};
 
 wss.on('connection', (ws) => {
   let clientId;
@@ -25,7 +26,7 @@ wss.on('connection', (ws) => {
     }
     if (parsedMessage.type === 'registerOperator') {
       clientId = 'operator_' + generateClientId();
-      clients[clientId] = {
+      operator[clientId] = {
         ws: ws,
         countdownInterval: null,
       };
@@ -91,6 +92,7 @@ function startCountdown(duration, clientId) {
   stopCountdown(clientId);
   console.log(clientId);
   let remainingTime = duration;
+  console.log(Object.keys(operator));
   const countdownInterval = setInterval(() => {
     if (remainingTime > 0) {
       clients[clientId].ws.send(
@@ -99,6 +101,15 @@ function startCountdown(duration, clientId) {
           remainingTime: remainingTime,
         })
       );
+      Object.keys(operator).forEach((item) => {
+        operator[item].ws.send(
+          JSON.stringify({
+            type: 'countdown',
+            remainingTime: remainingTime,
+            clientId
+          })
+        );
+      });
       remainingTime--;
     } else {
       clearInterval(countdownInterval);

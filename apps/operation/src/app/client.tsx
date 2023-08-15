@@ -34,7 +34,12 @@ function ClientApp({ clientId = 'client1' }) {
     <div className="App">
       <h1>Client - {clientId}</h1>
       <p>Received Countdown: {countdown} seconds</p>
-      <p>Received Message: {message}</p>
+      <div>
+        Received Message:{' '}
+        <div
+          dangerouslySetInnerHTML={{ __html: message.replace(/\n/g, '<br />') }}
+        />
+      </div>
     </div>
   );
 }
