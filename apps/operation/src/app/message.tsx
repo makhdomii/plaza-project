@@ -4,9 +4,9 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
 import playIc from '../assets/play.svg';
 import stopIc from '../assets/stop.svg';
-const ws = new WebSocket('ws://localhost:4040');
 function OperatorApp() {
   console.log('render');
+  const ws = new WebSocket('ws://localhost:4040');
   const [clientDetail, setClientDetail] = useState({
     remainingTime: '0',
     clientId: '',
