@@ -39,7 +39,7 @@ function OperatorApp() {
   });
   const sendMessage = (e: FormEvent<EventTarget>) => {
     e.preventDefault();
-    const { textBox, user } = e.currentTarget;
+    const { textBox, user } = e.currentTarget as HTMLFormElement;
     const messageObj = {
       type: 'operatorMessage',
       message: textBox.value,
@@ -59,7 +59,7 @@ function OperatorApp() {
   };
   const startCountdown = (e: FormEvent<EventTarget>, id: string) => {
     e.preventDefault();
-    const { minutes, seconds } = e.currentTarget;
+    const { minutes, seconds } = e.currentTarget as HTMLFormElement;
     console.log('countdown submited !', id);
     const countdownObj = {
       type: 'startCountdown',
