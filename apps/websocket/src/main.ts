@@ -20,16 +20,6 @@ wss.on('connection', (socket) => {
   socket.on('message', (message) => {
     let totalReferee = Object.keys(referees).length;
     let totalClient = Object.keys(clients).length;
-    // console.log(message.toString().split("'"));
-    // console.log(
-    //   message
-    //     .toString()
-    //     .split("'")
-    //     .filter(
-    //       (item) =>
-    //         item !== ':' && item !== '{' && item !== '}' && item !== ', '
-    //     )
-    // );
     console.log(message.toString());
     const msg = message
       .toString()
@@ -80,12 +70,6 @@ wss.on('connection', (socket) => {
       totalClientAnswerA += totalAnswers.filter((s) => s === 'a').length;
       totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
     });
-    console.log('total answers ===>', totalAnswerA, totalAnswerB);
-    console.log(
-      'total Client answers ===>',
-      totalClientAnswerA,
-      totalClientAnswerB
-    );
     syncOperator(
       JSON.stringify({
         type: 'syncTotal',
@@ -98,15 +82,6 @@ wss.on('connection', (socket) => {
         totalClientAnswerB,
       })
     );
-    // if (msg.type === 'registerClient') {
-    //   clients[msg.id] = { ws: socket, deviceId: msg.id };
-    // }
-    // if (msg.type === 'answerClient') {
-    //   clients[msg.id] = { ws: socket, deviceId: msg.id, answer: msg.answer };
-    // }
-    // Object.keys(operator).forEach((item) => {
-    //   operator[item].ws.send(message);
-    // });
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);
