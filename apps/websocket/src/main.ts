@@ -1,6 +1,8 @@
 const ws = require('ws');
 const http = require('http');
-
+// const Datababase = require('better-sqlite3')
+// import a from '../../../'
+// const db = new Datababase('../../../contestDb.db')
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.WSPORT ? Number(process.env.WSPORT) : 4000;
 const server = http.createServer();
@@ -8,6 +10,9 @@ const wss = new ws.Server({ server });
 const clients = {};
 const referees = {};
 const operator = {};
+const sevenSegments = {};
+let totalA = 0;
+let totalB = 0;
 
 wss.on('connection', (socket) => {
   console.log('WebSocket client connected');
@@ -20,7 +25,7 @@ wss.on('connection', (socket) => {
   socket.on('message', (message) => {
     let totalReferee = Object.keys(referees).length;
     let totalClient = Object.keys(clients).length;
-    console.log(message.toString());
+    // console.log(message.toString());
     const msg = message
       .toString()
       .split("'")
@@ -39,7 +44,24 @@ wss.on('connection', (socket) => {
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
     let totalClientAnswerB = 0;
-
+    function calculateTotals() {
+      Object.keys(referees).forEach((item) => {
+        const totalAnswers = referees[item].answer ?? [];
+        totalAnswerA += totalAnswers.filter((s) => s === 'a').length;
+        totalAnswerB += totalAnswers.filter((s) => s === 'b').length;
+      });
+      Object.keys(clients).forEach((item) => {
+        const totalAnswers = clients[item].answer ?? [];
+        totalClientAnswerA += totalAnswers.filter((s) => s === 'a').length;
+        totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
+      });
+    }
+    calculateTotals();
+    if (type === 'registerSevenSegment') {
+      console.log('register seven segment');
+      const userId = 'ssg_' + generateId();
+      sevenSegments[userId] = { ws: socket, deviceId, userId };
+    }
     if (type === 'registerOperator') {
       console.log('operator registered !');
       const userId = 'operator_' + generateId();
@@ -59,17 +81,17 @@ wss.on('connection', (socket) => {
         deviceId: msg.id,
         answer: answers,
       };
+      calculateTotals();
+      Object.keys(sevenSegments).forEach((item) => {
+        // console.log(item);
+        if (sevenSegments[item].deviceId === '1') {
+          console.log('seven segment light  ===>', totalAnswerB);
+          sevenSegments[item].ws.send(totalAnswerB);
+        }
+      });
+      // console.log('sevenSegments', sevenSegments);
     }
-    Object.keys(referees).forEach((item) => {
-      const totalAnswers = referees[item].answer ?? [];
-      totalAnswerA += totalAnswers.filter((s) => s === 'a').length;
-      totalAnswerB += totalAnswers.filter((s) => s === 'b').length;
-    });
-    Object.keys(clients).forEach((item) => {
-      const totalAnswers = clients[item].answer ?? [];
-      totalClientAnswerA += totalAnswers.filter((s) => s === 'a').length;
-      totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
-    });
+
     syncOperator(
       JSON.stringify({
         type: 'syncTotal',
@@ -96,8 +118,6 @@ function generateId() {
   return Math.random().toString(36).substr(2, 8);
 }
 function syncOperator(message) {
-  console.log('sync ==>', Object.keys(operator));
-  console.log('sync message ==>', message);
   Object.keys(operator).forEach((item) => {
     operator[item].ws.send(message);
   });
