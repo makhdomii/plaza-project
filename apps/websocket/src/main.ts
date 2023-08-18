@@ -1,8 +1,15 @@
 const ws = require('ws');
 const http = require('http');
-// const Datababase = require('better-sqlite3')
-// import a from '../../../'
-// const db = new Datababase('../../../contestDb.db')
+const sqlite3 = require('sqlite3').verbose();
+
+const db = new sqlite3.Database('data.db', (err) => {
+  if (err) {
+    console.log('Error Opening Database: ', err.message);
+  } else {
+    console.log('Connected to the DB');
+  }
+});
+
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.WSPORT ? Number(process.env.WSPORT) : 4000;
 const server = http.createServer();
@@ -13,7 +20,22 @@ const operator = {};
 const sevenSegments = {};
 let totalA = 0;
 let totalB = 0;
-
+db.run(
+  `CREATE TABLE IF NOT EXISTS data(
+  id INTEGER PRIMARY KEY,
+  createdAt TEXT,
+  answers TEXT,
+  isReferee TEXT,
+  deviceId TEXT
+)`,
+  (err) => {
+    if (err) {
+      console.log('Error Creating table: ', err.message);
+    } else {
+      console.log('Table "data" created or already exists');
+    }
+  }
+);
 wss.on('connection', (socket) => {
   console.log('WebSocket client connected');
   // TODO:
@@ -39,7 +61,7 @@ wss.on('connection', (socket) => {
       );
     const type = msg[1];
     const deviceId = msg[3];
-    console.log(type, deviceId, msg);
+    console.log(type, ' \n device id ===>', deviceId);
     let totalAnswerA = 0;
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
@@ -56,14 +78,12 @@ wss.on('connection', (socket) => {
         totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
       });
     }
-    calculateTotals();
+
     if (type === 'registerSevenSegment') {
-      console.log('register seven segment');
       const userId = 'ssg_' + generateId();
       sevenSegments[userId] = { ws: socket, deviceId, userId };
     }
     if (type === 'registerOperator') {
-      console.log('operator registered !');
       const userId = 'operator_' + generateId();
       operator[userId] = { ws: socket, userId };
     }
@@ -73,6 +93,8 @@ wss.on('connection', (socket) => {
     }
     if (type === 'answerReferee') {
       const answer = msg[5];
+      if (answer === 'b') totalB++;
+      if (answer === 'a') totalA++;
       let answers = referees[deviceId].answer
         ? [...referees[deviceId].answer, answer]
         : [answer];
@@ -81,17 +103,26 @@ wss.on('connection', (socket) => {
         deviceId: msg.id,
         answer: answers,
       };
-      calculateTotals();
-      Object.keys(sevenSegments).forEach((item) => {
-        // console.log(item);
-        if (sevenSegments[item].deviceId === '1') {
-          console.log('seven segment light  ===>', totalAnswerB);
-          sevenSegments[item].ws.send(totalAnswerB);
+      const values = [new Date().toISOString(), answer, 'true', deviceId];
+      const insertQuery =
+        'INSERT INTO data (createdAt, answers, isReferee, deviceId) VALUES (?, ?, ?, ?)';
+      db.run(insertQuery, values, (err) => {
+        if (err) {
+          console.log('Error inserting data:', err.message);
+        } else {
+          console.log('Data inserted into database');
         }
       });
-      // console.log('sevenSegments', sevenSegments);
+      Object.keys(sevenSegments).forEach((item) => {
+        if (sevenSegments[item].deviceId === '1') {
+          sevenSegments[item].ws.send(totalB);
+        }
+        if (sevenSegments[item].deviceId === '2') {
+          sevenSegments[item].ws.send(totalAnswerA);
+        }
+      });
     }
-
+    calculateTotals();
     syncOperator(
       JSON.stringify({
         type: 'syncTotal',
@@ -107,6 +138,13 @@ wss.on('connection', (socket) => {
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);
+    db.close((err) => {
+      if (err) {
+        console.log('Error Closing db connection:', err.message);
+      } else {
+        console.log('Data connection closed');
+      }
+    });
   });
 });
 
