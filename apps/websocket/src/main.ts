@@ -20,22 +20,22 @@ const operator = {};
 const sevenSegments = {};
 let totalA = 0;
 let totalB = 0;
-db.run(
-  `CREATE TABLE IF NOT EXISTS data(
-  id INTEGER PRIMARY KEY,
-  createdAt TEXT,
-  answers TEXT,
-  isReferee TEXT,
-  deviceId TEXT
-)`,
-  (err) => {
-    if (err) {
-      console.log('Error Creating table: ', err.message);
-    } else {
-      console.log('Table "data" created or already exists');
-    }
-  }
-);
+// db.run(
+//   `CREATE TABLE IF NOT EXISTS data(
+//   id INTEGER PRIMARY KEY,
+//   createdAt TEXT,
+//   answers TEXT,
+//   isReferee TEXT,
+//   deviceId TEXT
+// )`,
+//   (err) => {
+//     if (err) {
+//       console.log('Error Creating table: ', err.message);
+//     } else {
+//       console.log('Table "data" created or already exists');
+//     }
+//   }
+// );
 wss.on('connection', (socket) => {
   console.log('WebSocket client connected');
   // TODO:
@@ -61,11 +61,23 @@ wss.on('connection', (socket) => {
       );
     const type = msg[1];
     const deviceId = msg[3];
-    console.log(type, ' \n device id ===>', deviceId);
+    // console.log(`${type} \n device id ===>`, deviceId);
+    console.log(msg);
+
     let totalAnswerA = 0;
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
     let totalClientAnswerB = 0;
+    function showSevenSegmentNumbers() {
+      Object.keys(sevenSegments).forEach((item) => {
+        if (sevenSegments[item].deviceId === '1') {
+          sevenSegments[item].ws.send(totalB);
+        }
+        if (sevenSegments[item].deviceId === '2') {
+          sevenSegments[item].ws.send(totalA);
+        }
+      });
+    }
     function calculateTotals() {
       Object.keys(referees).forEach((item) => {
         const totalAnswers = referees[item].answer ?? [];
@@ -82,6 +94,11 @@ wss.on('connection', (socket) => {
     if (type === 'registerSevenSegment') {
       const userId = 'ssg_' + generateId();
       sevenSegments[userId] = { ws: socket, deviceId, userId };
+      console.log('totals ===>', totalA, totalB);
+      if (totalA > 0 || totalB > 0) {
+        console.log('segment number should update');
+        showSevenSegmentNumbers();
+      }
     }
     if (type === 'registerOperator') {
       const userId = 'operator_' + generateId();
@@ -103,30 +120,42 @@ wss.on('connection', (socket) => {
         deviceId: msg.id,
         answer: answers,
       };
-      const values = [new Date().toISOString(), answer, 'true', deviceId];
-      const insertQuery =
-        'INSERT INTO data (createdAt, answers, isReferee, deviceId) VALUES (?, ?, ?, ?)';
-      db.run(insertQuery, values, (err) => {
-        if (err) {
-          console.log('Error inserting data:', err.message);
-        } else {
-          console.log('Data inserted into database');
-        }
-      });
-      Object.keys(sevenSegments).forEach((item) => {
-        if (sevenSegments[item].deviceId === '1') {
-          sevenSegments[item].ws.send(totalB);
-        }
-        if (sevenSegments[item].deviceId === '2') {
-          sevenSegments[item].ws.send(totalAnswerA);
-        }
-      });
+      showSevenSegmentNumbers();
+    }
+    const plusObj = {
+      numB: (t) => {
+        totalB = t;
+      },
+      numA: (t) => {
+        totalA = t;
+      },
+    };
+    if (type === 'setTotalNumOperator') {
+      const a = msg[3];
+      const b = msg[5];
+      console.log('SetNumOperator b===>', msg[5]);
+      console.log('SetNumOperator a===>', msg[3]);
+      plusObj['numA'](a);
+      plusObj['numB'](b);
+      showSevenSegmentNumbers();
+    }
+    if (type === 'SetNumOperator') {
+      const t = msg[3];
+      const numberType = msg[2];
+      console.log('SetNumOperator ===>', numberType, t);
+      plusObj[numberType](t);
+      // const parsed = JSON.parse(message);
+      // totalA = parsed.answerA;
+      // totalB = parsed.asnwerB;
+      showSevenSegmentNumbers();
     }
     calculateTotals();
     syncOperator(
       JSON.stringify({
         type: 'syncTotal',
         total: totalReferee + totalClient,
+        totalA,
+        totalB,
         totalClient,
         totalReferee,
         totalRefereeAnswerA: totalAnswerA,
@@ -138,13 +167,13 @@ wss.on('connection', (socket) => {
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);
-    db.close((err) => {
-      if (err) {
-        console.log('Error Closing db connection:', err.message);
-      } else {
-        console.log('Data connection closed');
-      }
-    });
+    // db.close((err) => {
+    //   if (err) {
+    //     console.log('Error Closing db connection:', err.message);
+    //   } else {
+    //     console.log('Data connection closed');
+    //   }
+    // });
   });
 });
 

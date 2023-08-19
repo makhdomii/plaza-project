@@ -20,7 +20,8 @@ wss.on('connection', (ws) => {
     if (parsedMessage.type === 'clientList') {
       let list = [];
       Object.keys(clients).forEach((element) => {
-        if (!element.startsWith('operator_')) list.push(element);
+        if (!element.startsWith('operator_'))
+          list.push({ id: element, name: clients[element].name });
       });
       ws.send(JSON.stringify({ type: 'clientList', list: list }));
     }
@@ -42,6 +43,7 @@ wss.on('connection', (ws) => {
       clients[clientId] = {
         ws: ws,
         countdownInterval: null,
+        name: parsedMessage.name,
       };
       ws.send(
         JSON.stringify({
@@ -91,29 +93,30 @@ function pauseCountdown(clientId, duration) {
 function startCountdown(duration, clientId) {
   stopCountdown(clientId);
   console.log(clientId);
-  let remainingTime = duration;
+  let remainingTime = 0;
   console.log(Object.keys(operator));
   const countdownInterval = setInterval(() => {
-    if (remainingTime > 0) {
-      clients[clientId].ws.send(
+    // if (remainingTime > 0) {
+    clients[clientId].ws.send(
+      JSON.stringify({
+        type: 'countdown',
+        remainingTime: remainingTime,
+        registerTimer: remainingTime === 0 ? true : false,
+      })
+    );
+    Object.keys(operator).forEach((item) => {
+      operator[item].ws.send(
         JSON.stringify({
           type: 'countdown',
           remainingTime: remainingTime,
+          clientId,
         })
       );
-      Object.keys(operator).forEach((item) => {
-        operator[item].ws.send(
-          JSON.stringify({
-            type: 'countdown',
-            remainingTime: remainingTime,
-            clientId
-          })
-        );
-      });
-      remainingTime--;
-    } else {
-      clearInterval(countdownInterval);
-    }
+    });
+    remainingTime++;
+    // } else {
+    //   clearInterval(countdownInterval);
+    // }
   }, 1000);
 
   clients[clientId].countdownInterval = countdownInterval;

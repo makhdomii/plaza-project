@@ -12,7 +12,9 @@ function OperatorApp() {
     clientId: '',
   });
   // const [countdownDuration, setCountdownDuration] = useState(0);
-  const [clientList, setClientList] = useState([]);
+  const [clientList, setClientList] = useState<[{ id: string; name: string }]>([
+    { name: '', id: '' },
+  ]);
 
   useEffect(() => {
     ws.onopen = () => {
@@ -46,6 +48,7 @@ function OperatorApp() {
       user: user.value,
     };
     ws.send(JSON.stringify(messageObj));
+    textBox.value = '';
     // setMessage('');
   };
   const formatTime = (seconds: number) => {
@@ -57,13 +60,13 @@ function OperatorApp() {
 
     return `${formattedMinutes}:${formattedSeconds}`;
   };
-  const startCountdown = (e: FormEvent<EventTarget>, id: string) => {
-    e.preventDefault();
-    const { minutes, seconds } = e.currentTarget as HTMLFormElement;
-    console.log('countdown submited !', id);
+  const startCountdown = (id: string) => {
+    // e.preventDefault();
+    // const { minutes, seconds } = e.currentTarget as HTMLFormElement;
+    // console.log('countdown submited !', id);
     const countdownObj = {
       type: 'startCountdown',
-      duration: Number(minutes.value) * 60 + seconds.value,
+      // duration: Number(minutes.value) * 60 + seconds.value,
       user: id,
     };
     ws.send(JSON.stringify(countdownObj));
@@ -81,25 +84,48 @@ function OperatorApp() {
   return (
     <div className="text-right flex">
       <div className="w-1/4 bg-[#017338] h-screen flex flex-col justify-center">
-        <button
-          onClick={() => {
-            ws.send(JSON.stringify({ type: 'clientList' }));
-          }}
-        >
-          get list
-        </button>
+        <div className='text-center'>
+          <button
+            className="bg-[#fff] py-4 px-8 rounded-lg"
+            onClick={() => {
+              ws.send(JSON.stringify({ type: 'clientList' }));
+            }}
+          >
+            نمایش لیست داوران
+          </button>
+        </div>
         {clientList.map((item, index) => {
+          console.log(item);
           return (
             <div key={'client_list' + index} className="py-5 px-8 border-b">
               <div className="flex justify-between items-center text-[#fff]">
-                <p className="font-bold text-lg">کاربر شماره {index + 1}</p>
-                {clientDetail.clientId === item && (
+                <p className="font-bold text-lg">دستگاه {item.name}</p>
+                {clientDetail.clientId === item.id && (
                   <span>{clientDetail.remainingTime}</span>
                 )}
+                <div className="w-1/3">
+                  <button
+                    className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2 mx-4"
+                    type="submit"
+                    onClick={() => {
+                      startCountdown(item.id);
+                    }}
+                  >
+                    <img src={playIc} className="w-5" />
+                  </button>
+                  <button
+                    className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2"
+                    type="button"
+                    onClick={() => {
+                      stopCountdown(item.id);
+                    }}
+                  >
+                    <img src={stopIc} className="w-5" />
+                  </button>
+                </div>
               </div>
-              <form onSubmit={(e) => startCountdown(e, item)}>
-                <div className="flex relative items-center">
-                  <input
+              <div className="flex relative items-center">
+                {/* <input
                     className="w-1/3 border text-center text-slate-900 shadow-sm focus:shadow-lg rounded-3xl py-3 px-5 my-2 ml-1"
                     name="seconds"
                     type="number"
@@ -110,26 +136,8 @@ function OperatorApp() {
                     name="minutes"
                     type="number"
                     placeholder="دقیقه"
-                  />
-                  <div className="w-1/3">
-                    <button
-                      className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2 mx-4"
-                      type="submit"
-                    >
-                      <img src={playIc} className="w-5" />
-                    </button>
-                    <button
-                      className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2"
-                      type="button"
-                      onClick={() => {
-                        stopCountdown(item);
-                      }}
-                    >
-                      <img src={stopIc} className="w-5" />
-                    </button>
-                  </div>
-                </div>
-              </form>
+                  /> */}
+              </div>
             </div>
           );
         })}
@@ -149,8 +157,11 @@ function OperatorApp() {
               >
                 {clientList.map((item, index) => {
                   return (
-                    <option key={'message_client_list_' + index} value={item}>
-                      شماره {index + 1}
+                    <option
+                      key={'message_client_list_' + index}
+                      value={item.id}
+                    >
+                      {item.name}
                     </option>
                   );
                 })}
@@ -159,7 +170,7 @@ function OperatorApp() {
             <textarea
               className="w-full border border-[#017338] rounded-md py-3 px-5 my-2"
               name="textBox"
-              rows={10}
+              rows={5}
             />
             <button
               className="rounded-md bg-[#017338] text-emerald-50 py-3 px-6"
