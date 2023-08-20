@@ -6,6 +6,7 @@ import App from './app/app';
 import Referee from './app/referee';
 import Message from './app/message';
 import Client from './app/client';
+import LCD from './app/lcd';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -24,6 +25,9 @@ root.render(
       </Routes>
       <Routes>
         <Route Component={Message} path="message" />
+      </Routes>
+      <Routes>
+        <Route Component={LCD} path="lcd" />
       </Routes>
     </BrowserRouter>
   </StrictMode>

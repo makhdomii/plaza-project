@@ -102,7 +102,7 @@ export function App() {
             blue={total.refereeA}
             red={total.refereeB}
           />
-          <div className={'px-3'}>
+          {/* <div className={'px-3'}>
             <p className="text-red-50 text-4xl pb-2">تعداد کل شرکت کنندگان</p>
             <div className="bg-teal-100 px-5 py-4 rounded-md">
               <p className="text-center text-3xl">{total.client}</p>
@@ -113,7 +113,7 @@ export function App() {
             <div className="bg-teal-100 px-5 py-4 rounded-md">
               <p className="text-center text-3xl">{total.referee}</p>
             </div>
-          </div>
+          </div> */}
           {/* <div className={'mr-9 '}>
             <button className={'p-3 mt-8 mr-5 bg-[#fff] rounded-md'}>
               <img className="w-6" src={refreshIc} />
@@ -191,7 +191,13 @@ export function App() {
           <div>
             {/* <p className="pb-5 text-lg">تنظیمات نمایشگر</p> */}
 
-            <button className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]">
+            <button
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'generateFake'");
+              }}
+            >
               شروع رای گیری
             </button>
             <button className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]">

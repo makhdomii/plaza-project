@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nx run-many --target=serve --projects=op,websocket,chat --parallel=6",
+    "op": "HOST=192.168.10.100:4200 nx serve op",
     "pr": "concurrently --kill-others 'nx serve chat' 'nx run-many --target=serve --projects=op,websocket  --parallel=3'"
   },
   "private": true,

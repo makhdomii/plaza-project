@@ -130,6 +130,7 @@ wss.on('connection', (socket) => {
         totalA = t;
       },
     };
+
     if (type === 'setTotalNumOperator') {
       const a = msg[3];
       const b = msg[5];
@@ -164,6 +165,37 @@ wss.on('connection', (socket) => {
         totalClientAnswerB,
       })
     );
+    if (type === 'generateFake') {
+      let a = 0;
+      let b = 0;
+      const c = setInterval(() => {
+        if (Math.random() * (5 - 1) + 1 > 3 && a < 17) {
+          a++;
+        }
+        if (Math.random() * (5 - 1) + 1 > 3 && b < 11) {
+          b++;
+        }
+        // 6 - 15
+
+        syncOperator(
+          JSON.stringify({
+            type: 'syncTotal',
+            total: totalReferee + totalClient,
+            totalA,
+            totalB,
+            totalClient: a + b,
+            totalReferee,
+            totalRefereeAnswerA: totalAnswerA,
+            totalRefereeAnswerb: totalAnswerB,
+            totalClientAnswerA: a,
+            totalClientAnswerB: b,
+          })
+        );
+        if (a + b > 25) {
+          clearInterval(c);
+        }
+      }, 500);
+    }
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);
