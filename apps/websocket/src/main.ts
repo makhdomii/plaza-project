@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 const ws = require('ws');
 const http = require('http');
 const sqlite3 = require('sqlite3').verbose();
@@ -20,34 +22,16 @@ const operator = {};
 const sevenSegments = {};
 let totalA = 0;
 let totalB = 0;
-// db.run(
-//   `CREATE TABLE IF NOT EXISTS data(
-//   id INTEGER PRIMARY KEY,
-//   createdAt TEXT,
-//   answers TEXT,
-//   isReferee TEXT,
-//   deviceId TEXT
-// )`,
-//   (err) => {
-//     if (err) {
-//       console.log('Error Creating table: ', err.message);
-//     } else {
-//       console.log('Table "data" created or already exists');
-//     }
-//   }
-// );
+const hardware = {
+  ws: null,
+  deviceId: null,
+};
+let letClientAnswer = false;
+let pauseGame = false;
 wss.on('connection', (socket) => {
-  console.log('WebSocket client connected');
-  // TODO:
-  // '{"type":"registerClient","deviceId":"1"}'
-  // '{"type":"answerClient", "deviceId":"1", "answer":"b"}'
-
-  // '{"type":"registerReferee","deviceId":"1"}'
-  // '{"type":"answerReferee","deviceId":"1","answer":"b"}'
   socket.on('message', (message) => {
     let totalReferee = Object.keys(referees).length;
     let totalClient = Object.keys(clients).length;
-    // console.log(message.toString());
     const msg = message
       .toString()
       .split("'")
@@ -61,13 +45,40 @@ wss.on('connection', (socket) => {
       );
     const type = msg[1];
     const deviceId = msg[3];
-    // console.log(`${type} \n device id ===>`, deviceId);
     console.log(msg);
 
     let totalAnswerA = 0;
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
     let totalClientAnswerB = 0;
+    if (type === 'playContest') {
+      pauseGame = false;
+    }
+    if (type === 'pauseContest') {
+      pauseGame = true;
+    }
+    if (pauseGame) {
+      return;
+    }
+
+    if (type === 'startContest') {
+      letClientAnswer = true;
+    }
+    if (type === 'pullDownSSg') {
+      hardware.ws.send('a');
+    }
+    if (type === 'moveBox') {
+      hardware.ws.send('b');
+    }
+    if (type === 'boxOnA') {
+      hardware.ws.send('c');
+    }
+    if (type === 'boxOnB') {
+      hardware.ws.send('d');
+    }
+    if (type === 'openBox') {
+      hardware.ws.send('e');
+    }
     function showSevenSegmentNumbers() {
       Object.keys(sevenSegments).forEach((item) => {
         if (sevenSegments[item].deviceId === '1') {
@@ -90,7 +101,43 @@ wss.on('connection', (socket) => {
         totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
       });
     }
+    // const messageType = {
+    //   registerClient: () => {},
+    //   answerClient: () => {},
+    //   registerHardware: () => {},
+    //   registerSevenSegment: () => {},
+    //   registerOperator: () => {},
+    //   registerReferee: () => {},
+    //   answerReferee: () => {},
+    //   setTotalNumOperator: () => {},
+    //   SetNumOperator: () => {},
+    //   generateFake: () => {},
+    // };
+    if (type === 'registerClient') {
+      const userId = 'client_' + generateId();
+      clients[userId] = { ws: socket, userId, deviceId };
+    }
+    if (type === 'answerClient' && letClientAnswer) {
+      if (typeof clients[deviceId].answer === 'string') {
+        return;
+      } else {
+        const answer = msg[5];
+        if (answer === 'b') totalB++;
+        if (answer === 'a') totalA++;
+        clients[deviceId] = {
+          ws: socket,
+          deviceId: msg.id,
+          answer,
+          latestUpdate: new Date(),
+        };
+      }
+    }
 
+    if (type === 'registerHardware') {
+      hardware.ws = socket;
+      hardware.deviceId = deviceId;
+      console.log('hardware connected');
+    }
     if (type === 'registerSevenSegment') {
       const userId = 'ssg_' + generateId();
       sevenSegments[userId] = { ws: socket, deviceId, userId };
@@ -145,9 +192,6 @@ wss.on('connection', (socket) => {
       const numberType = msg[2];
       console.log('SetNumOperator ===>', numberType, t);
       plusObj[numberType](t);
-      // const parsed = JSON.parse(message);
-      // totalA = parsed.answerA;
-      // totalB = parsed.asnwerB;
       showSevenSegmentNumbers();
     }
     calculateTotals();
@@ -165,47 +209,9 @@ wss.on('connection', (socket) => {
         totalClientAnswerB,
       })
     );
-    if (type === 'generateFake') {
-      let a = 0;
-      let b = 0;
-      const c = setInterval(() => {
-        if (Math.random() * (5 - 1) + 1 > 3 && a < 17) {
-          a++;
-        }
-        if (Math.random() * (5 - 1) + 1 > 3 && b < 11) {
-          b++;
-        }
-        // 6 - 15
-
-        syncOperator(
-          JSON.stringify({
-            type: 'syncTotal',
-            total: totalReferee + totalClient,
-            totalA,
-            totalB,
-            totalClient: a + b,
-            totalReferee,
-            totalRefereeAnswerA: totalAnswerA,
-            totalRefereeAnswerb: totalAnswerB,
-            totalClientAnswerA: a,
-            totalClientAnswerB: b,
-          })
-        );
-        if (a + b > 25) {
-          clearInterval(c);
-        }
-      }, 500);
-    }
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);
-    // db.close((err) => {
-    //   if (err) {
-    //     console.log('Error Closing db connection:', err.message);
-    //   } else {
-    //     console.log('Data connection closed');
-    //   }
-    // });
   });
 });
 
@@ -221,3 +227,22 @@ function syncOperator(message) {
     operator[item].ws.send(message);
   });
 }
+
+// csv create functions
+
+// function convertObjectToCSV(data: Record<string, any>[]): string {
+//   const csvRows: string[] = [];
+
+//   const headers = Object.keys(data[0]);
+//   csvRows.push(headers.join(','));
+
+//   for (const row of data) {
+//     const values = headers.map((header) => {
+//       const escapedValue = row[header].toString().replace(/"/g, '\\"');
+//       return `"${escapedValue}"`;
+//     });
+//     csvRows.push(values.join(','));
+//   }
+
+//   return csvRows.join('\n');
+// }

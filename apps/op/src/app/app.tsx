@@ -186,7 +186,7 @@ export function App() {
           </div>
         </Container>
       </div>
-      <div className={'bg-[#b71d25] py-10'}>
+      <div className={'py-10'}>
         <Container className="flex justify-between pb-5">
           <div>
             {/* <p className="pb-5 text-lg">تنظیمات نمایشگر</p> */}
@@ -195,19 +195,73 @@ export function App() {
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
               onClick={() => {
                 // ws.send('')
-                ws.send("'type':'generateFake'");
+                ws.send("'type':'pauseContest'");
+              }}
+            >
+              نگه داشتن مسابقه
+            </button>
+            <button
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'playContest'");
+              }}
+            >
+              ادامه مسابقه
+            </button>
+            <button
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'startContest'");
               }}
             >
               شروع رای گیری
             </button>
-            <button className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]">
+            <button
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'pullDownSSg'");
+              }}
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+            >
               پایین آمدن شمارشگر
             </button>
-            <button className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]">
+            <button
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'moveBox'");
+              }}
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+            >
               حرکت جعبه پول
             </button>
-            <button className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]">
-              باز شدن جعبه پول
+            <button
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'boxOnA'");
+              }}
+              className="bg-blue-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
+            >
+              حرکت به سمت آبی
+            </button>
+            <button
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'boxOnB'");
+              }}
+              className="bg-red-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
+            >
+              حرکت به سمت قرمز
+            </button>
+            <button
+              onClick={() => {
+                // ws.send('')
+                ws.send("'type':'openBox'");
+              }}
+              className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
+            >
+              باز شدن
             </button>
           </div>
         </Container>
