@@ -11,4 +11,5 @@ npm install
 REM Run the Node.js app
 echo "running project ..."
 npm start
-pause
+@echo off
+cmd /k
