@@ -41,11 +41,12 @@ wss.on('connection', (socket) => {
           item !== '{' &&
           item !== '}' &&
           item !== ', ' &&
+          item !== ',' &&
           item !== ''
       );
     const type = msg[1];
     const deviceId = msg[3];
-    console.log(msg);
+    console.log('line 49 ==>', msg);
 
     let totalAnswerA = 0;
     let totalAnswerB = 0;
@@ -96,9 +97,10 @@ wss.on('connection', (socket) => {
         totalAnswerB += totalAnswers.filter((s) => s === 'b').length;
       });
       Object.keys(clients).forEach((item) => {
-        const totalAnswers = clients[item].answer ?? [];
-        totalClientAnswerA += totalAnswers.filter((s) => s === 'a').length;
-        totalClientAnswerB += totalAnswers.filter((s) => s === 'b').length;
+        if (clients[item].answer === 'a')
+          totalClientAnswerA = totalClientAnswerA + 1;
+        if (clients[item].answer === 'b')
+          totalClientAnswerB = totalClientAnswerB + 1;
       });
     }
     // const messageType = {
@@ -115,22 +117,30 @@ wss.on('connection', (socket) => {
     // };
     if (type === 'registerClient') {
       const userId = 'client_' + generateId();
-      clients[userId] = { ws: socket, userId, deviceId };
+      clients[userId] = { ws: socket, userId, deviceId, answer: null };
     }
     if (type === 'answerClient' && letClientAnswer) {
-      if (typeof clients[deviceId].answer === 'string') {
+      // if (
+      //   clients[deviceId] &&
+      //   clients[deviceId].answer &&
+      //   typeof clients[deviceId].answer === 'string'
+      // ) {
+      //   return;
+      // } else {
+
+      if (deviceId && clients[deviceId] && clients[deviceId].answer) {
         return;
-      } else {
-        const answer = msg[5];
-        if (answer === 'b') totalB++;
-        if (answer === 'a') totalA++;
-        clients[deviceId] = {
-          ws: socket,
-          deviceId: msg.id,
-          answer,
-          latestUpdate: new Date(),
-        };
       }
+      const answer = msg[5];
+      // if (answer === 'b') totalClientAnswerB++;
+      // if (answer === 'a') totalClientAnswerA++;
+      clients[deviceId] = {
+        ws: socket,
+        deviceId: msg.id,
+        answer,
+        latestUpdate: new Date(),
+      };
+      // }
     }
 
     if (type === 'registerHardware') {
@@ -141,7 +151,6 @@ wss.on('connection', (socket) => {
     if (type === 'registerSevenSegment') {
       const userId = 'ssg_' + generateId();
       sevenSegments[userId] = { ws: socket, deviceId, userId };
-      console.log('totals ===>', totalA, totalB);
       if (totalA > 0 || totalB > 0) {
         console.log('segment number should update');
         showSevenSegmentNumbers();
@@ -181,16 +190,31 @@ wss.on('connection', (socket) => {
     if (type === 'setTotalNumOperator') {
       const a = msg[3];
       const b = msg[5];
-      console.log('SetNumOperator b===>', msg[5]);
-      console.log('SetNumOperator a===>', msg[3]);
-      plusObj['numA'](a);
-      plusObj['numB'](b);
-      showSevenSegmentNumbers();
+      const totalAInterval = setInterval(() => {
+        if (Number(totalA) === Number(a)) {
+          clearInterval(totalAInterval);
+          return;
+        } else {
+          console.log('interval started');
+          plusObj['numA'](totalA++);
+          showSevenSegmentNumbers();
+        }
+      }, 500);
+      setInterval(() => {
+        if (Number(totalB) === Number(b)) {
+          // clearInterval(totalBInterval);
+          return;
+        } else {
+          plusObj['numB'](totalB++);
+          showSevenSegmentNumbers();
+        }
+      }, 500);
+      // plusObj['numB'](b);
     }
     if (type === 'SetNumOperator') {
       const t = msg[3];
       const numberType = msg[2];
-      console.log('SetNumOperator ===>', numberType, t);
+
       plusObj[numberType](t);
       showSevenSegmentNumbers();
     }

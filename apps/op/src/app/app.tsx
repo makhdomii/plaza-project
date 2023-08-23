@@ -159,9 +159,7 @@ export function App() {
                   return;
                 }
                 ws.send(
-                  `{'type':'setTotalNumOperator', 'numA':'${
-                    blue.value ? blue.value : 0
-                  }', 'numB':'${red.value ? red.value : 0}'}`
+                  `{'type':'setTotalNumOperator', 'numA':'${blue.value}', 'numB':'${red.value}'}`
                 );
                 red.value = '';
                 blue.value = '';
@@ -189,12 +187,9 @@ export function App() {
       <div className={'py-10'}>
         <Container className="flex justify-between pb-5">
           <div>
-            {/* <p className="pb-5 text-lg">تنظیمات نمایشگر</p> */}
-
             <button
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'pauseContest'");
               }}
             >
@@ -203,7 +198,6 @@ export function App() {
             <button
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'playContest'");
               }}
             >
@@ -212,7 +206,6 @@ export function App() {
             <button
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'startContest'");
               }}
             >
@@ -220,7 +213,6 @@ export function App() {
             </button>
             <button
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'pullDownSSg'");
               }}
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
@@ -229,7 +221,6 @@ export function App() {
             </button>
             <button
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'moveBox'");
               }}
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
@@ -238,7 +229,6 @@ export function App() {
             </button>
             <button
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'boxOnA'");
               }}
               className="bg-blue-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
@@ -247,7 +237,6 @@ export function App() {
             </button>
             <button
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'boxOnB'");
               }}
               className="bg-red-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
@@ -256,7 +245,6 @@ export function App() {
             </button>
             <button
               onClick={() => {
-                // ws.send('')
                 ws.send("'type':'openBox'");
               }}
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
