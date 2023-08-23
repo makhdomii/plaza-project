@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node run.ts",
-    "server": "nx run-many --target=serve --projects=op,websocket,chat --parallel=6"
+    "start": "nx run-many --target=serve --projects=op,websocket,chat --parallel=6"
   },
   "private": true,
   "devDependencies": {
@@ -53,7 +52,6 @@
     "prettier": "^2.6.2",
     "react-refresh": "^0.10.0",
     "sass": "^1.55.0",
-    "simple-git": "^3.19.1",
     "tailwindcss": "3.2.7",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
@@ -70,7 +68,6 @@
     "concurrently": "^8.2.0",
     "cors": "^2.8.5",
     "express": "~4.18.1",
-    "git-promise": "^1.0.0",
     "http": "^0.0.1-security",
     "react": "18.2.0",
     "react-dom": "18.2.0",
