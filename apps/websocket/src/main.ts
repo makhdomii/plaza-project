@@ -83,9 +83,11 @@ wss.on('connection', (socket) => {
     function showSevenSegmentNumbers() {
       Object.keys(sevenSegments).forEach((item) => {
         if (sevenSegments[item].deviceId === '1') {
+          console.log('total B ===> ', totalB);
           sevenSegments[item].ws.send(totalB);
         }
         if (sevenSegments[item].deviceId === '2') {
+          console.log('total A ===> ', totalA);
           sevenSegments[item].ws.send(totalA);
         }
       });
@@ -144,16 +146,16 @@ wss.on('connection', (socket) => {
     }
 
     if (type === 'registerHardware') {
-      hardware.deviceId = { deviceId, ws: socket };
+      hardware[deviceId] = { deviceId, ws: socket };
       console.log('hardware connected');
     }
     if (type === 'registerSevenSegment') {
       const userId = 'ssg_' + generateId();
       sevenSegments[userId] = { ws: socket, deviceId, userId };
-      if (totalA > 0 || totalB > 0) {
-        console.log('segment number should update');
-        showSevenSegmentNumbers();
-      }
+      // if (totalA > 0 || totalB > 0) {
+      console.log('segment number should update');
+      showSevenSegmentNumbers();
+      // }
     }
     if (type === 'registerOperator') {
       const userId = 'operator_' + generateId();
@@ -189,26 +191,27 @@ wss.on('connection', (socket) => {
     if (type === 'setTotalNumOperator') {
       const a = msg[3];
       const b = msg[5];
-      const totalAInterval = setInterval(() => {
-        if (Number(totalA) === Number(a)) {
-          clearInterval(totalAInterval);
-          return;
-        } else {
-          console.log('interval started');
-          plusObj['numA'](totalA++);
-          showSevenSegmentNumbers();
-        }
-      }, 500);
-      setInterval(() => {
-        if (Number(totalB) === Number(b)) {
-          // clearInterval(totalBInterval);
-          return;
-        } else {
-          plusObj['numB'](totalB++);
-          showSevenSegmentNumbers();
-        }
-      }, 500);
-      // plusObj['numB'](b);
+      // const totalAInterval = setInterval(() => {
+      //   if (Number(totalA) === Number(a)) {
+      //     clearInterval(totalAInterval);
+      //     return;
+      //   } else {
+      //     console.log('interval started');
+      //     plusObj['numA'](totalA++);
+      //     showSevenSegmentNumbers();
+      //   }
+      // }, 500);
+      // setInterval(() => {
+      //   if (Number(totalB) === Number(b)) {
+      //     // clearInterval(totalBInterval);
+      //     return;
+      //   } else {
+      //     plusObj['numB'](totalB++);
+      //   }
+      // }, 500);
+      plusObj['numA'](a);
+      plusObj['numB'](b);
+      showSevenSegmentNumbers();
     }
     if (type === 'SetNumOperator') {
       const t = msg[3];

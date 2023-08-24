@@ -4,12 +4,12 @@
 REM Pull from GitHub repository
 git pull
 
-REM Install Node.js app dependencies
-echo "installing dependencies ..."
-npm install
+@REM REM Install Node.js app dependencies
+@REM echo "installing dependencies ..."
+@REM npm install
 
-REM Run the Node.js app
-echo "running project ..."
-npm start
-@echo off
-cmd /k
+@REM REM Run the Node.js app
+@REM echo "running project ..."
+@REM npm start
+@REM @echo off
+@REM cmd /k
