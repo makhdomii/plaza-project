@@ -66,19 +66,19 @@ wss.on('connection', (socket) => {
       letClientAnswer = true;
     }
     if (type === 'pullDownSSg') {
-      hardware.ws.send('a');
+      hardware['1'].ws.send('a');
     }
     if (type === 'moveBox') {
-      hardware.ws.send('b');
+      hardware['2'].ws.send('b');
     }
     if (type === 'boxOnA') {
-      hardware.ws.send('c');
+      hardware['2'].ws.send('c');
     }
     if (type === 'boxOnB') {
-      hardware.ws.send('d');
+      hardware['2'].ws.send('d');
     }
     if (type === 'openBox') {
-      hardware.ws.send('e');
+      hardware['2'].ws.send('e');
     }
     function showSevenSegmentNumbers() {
       Object.keys(sevenSegments).forEach((item) => {
@@ -144,8 +144,7 @@ wss.on('connection', (socket) => {
     }
 
     if (type === 'registerHardware') {
-      hardware.ws = socket;
-      hardware.deviceId = deviceId;
+      hardware.deviceId = { deviceId, ws: socket };
       console.log('hardware connected');
     }
     if (type === 'registerSevenSegment') {

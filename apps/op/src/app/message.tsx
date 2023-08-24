@@ -6,7 +6,7 @@ import playIc from '../assets/play.svg';
 import stopIc from '../assets/stop.svg';
 function OperatorApp() {
   console.log('render');
-  const ws = new WebSocket('ws://localhost:4040');
+  const ws = new WebSocket('ws://192.168.10.100:4040');
   const [clientDetail, setClientDetail] = useState({
     remainingTime: '0',
     clientId: '',

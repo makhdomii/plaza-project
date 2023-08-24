@@ -3,7 +3,7 @@ import classname from 'classnames';
 import { Num } from './number';
 import { Blue } from './blue';
 
-const ws = new WebSocket('ws://localhost:4000');
+const ws = new WebSocket('ws://192.168.10.100:4000');
 
 export function LCD() {
   const [total, setTotal] = useState({
