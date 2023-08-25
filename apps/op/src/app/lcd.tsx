@@ -28,11 +28,11 @@ export function LCD() {
   return (
     <>
       <div className={classname('flex h-screen w-screen')}>
-        <div className="w-1/2 text-[40vw] text-center bg-blue-500 text-[#fff] relative">
-          <Num seconds={total.totalA} />
-        </div>
         <div className="w-1/2 text-[40vw] text-center bg-red-500 text-[#fff] relative">
           <Blue seconds={total.totalB} />
+        </div>
+        <div className="w-1/2 text-[40vw] text-center bg-blue-500 text-[#fff] relative">
+          <Num seconds={total.totalA} />
         </div>
       </div>
     </>

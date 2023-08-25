@@ -39,7 +39,7 @@ export const Num = ({ seconds }: CountDownType) => {
           id="second-2"
           className="num-0"
           width="300"
-          height="240"
+          height="340"
           viewBox="0 0 260 480"
         >
           <use xlinkHref="#unit-h" className="segment a" x="30" y="0"></use>
@@ -54,7 +54,7 @@ export const Num = ({ seconds }: CountDownType) => {
           id="second-1"
           className="num-0"
           width="300"
-          height="240"
+          height="340"
           viewBox="0 0 260 480"
         >
           <use xlinkHref="#unit-h" className="segment a" x="30" y="0"></use>

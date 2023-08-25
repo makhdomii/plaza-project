@@ -39,7 +39,7 @@ export const Blue = ({ seconds }: CountDownType) => {
           id={'blue-2'}
           className={`blue-0`}
           width="300"
-          height="240"
+          height="340"
           viewBox="0 0 260 480"
         >
           <use xlinkHref="#unit-h" className="segment a" x="30" y="0"></use>
@@ -54,7 +54,7 @@ export const Blue = ({ seconds }: CountDownType) => {
           id={'blue-1'}
           className={`blue-0`}
           width="300"
-          height="240"
+          height="340"
           viewBox="0 0 260 480"
         >
           <use xlinkHref="#unit-h" className="segment a" x="30" y="0"></use>
