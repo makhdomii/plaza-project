@@ -52,15 +52,14 @@ wss.on('connection', (ws) => {
         })
       );
     }
-    if (parsedMessage.type === 'startCountdown') {
-      const duration = parsedMessage.duration;
-      startCountdown(duration, parsedMessage.user);
+    if (parsedMessage.type === 'startTimer') {
+      startCountdown(parsedMessage.user);
     }
     if (parsedMessage.type === 'operatorMessage') {
       const message = parsedMessage.message;
       sendMessageToClient(parsedMessage.user, message);
     }
-    if (parsedMessage.type === 'stopCountdown') {
+    if (parsedMessage.type === 'stopTimer') {
       console.log('stop count down' + parsedMessage.user);
       stopCountdown(parsedMessage.user);
     }
@@ -90,48 +89,45 @@ function generateClientId() {
 function pauseCountdown(clientId, duration) {
   clearInterval(clients[clientId].countdownInterval);
 }
-function startCountdown(duration, clientId) {
+function startCountdown(clientId) {
   stopCountdown(clientId);
-  console.log(clientId);
-  let remainingTime = 0;
-  console.log(Object.keys(operator));
-  const countdownInterval = setInterval(() => {
-    // if (remainingTime > 0) {
-    clients[clientId].ws.send(
+  clients[clientId].ws.send(
+    JSON.stringify({
+      type: 'startTimer',
+    })
+  );
+  Object.keys(operator).forEach((item) => {
+    operator[item].ws.send(
       JSON.stringify({
-        type: 'countdown',
-        remainingTime: remainingTime,
-        registerTimer: remainingTime === 0 ? true : false,
+        type: 'startTimer',
+        clientId,
       })
     );
-    Object.keys(operator).forEach((item) => {
-      operator[item].ws.send(
-        JSON.stringify({
-          type: 'countdown',
-          remainingTime: remainingTime,
-          clientId,
-        })
-      );
-    });
-    remainingTime++;
-    // } else {
-    //   clearInterval(countdownInterval);
-    // }
-  }, 1000);
+  });
+  // remainingTime++;
+  // } else {
+  //   clearInterval(countdownInterval);
+  // }
+  // }, 1000);
 
-  clients[clientId].countdownInterval = countdownInterval;
+  // clients[clientId].countdownInterval = countdownInterval;
 }
 
 function setCountdownForClient(clientId, duration) {
   stopCountdown(clientId);
-  startCountdown(duration, clientId);
+  startCountdown(clientId);
 }
 
 function stopCountdown(clientId) {
-  if (clients[clientId].countdownInterval) {
-    clearInterval(clients[clientId].countdownInterval);
-    clients[clientId].countdownInterval = null;
-  }
+  clients[clientId].ws.send(
+    JSON.stringify({
+      type: 'stopTimer',
+    })
+  );
+  // if (clients[clientId].countdownInterval) {
+  //   clearInterval(clients[clientId].countdownInterval);
+  //   clients[clientId].countdownInterval = null;
+  // }
 }
 
 function sendMessageToClient(targetClient, message) {
