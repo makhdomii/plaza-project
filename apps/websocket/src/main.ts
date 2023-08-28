@@ -1,16 +1,16 @@
 import fs from 'fs';
 
-const ws = require('ws');
-const http = require('http');
-const sqlite3 = require('sqlite3').verbose();
+import ws from 'ws';
+import http from 'http';
+// const sqlite3 = require('sqlite3').verbose();
 
-const db = new sqlite3.Database('data.db', (err) => {
-  if (err) {
-    console.log('Error Opening Database: ', err.message);
-  } else {
-    console.log('Connected to the DB');
-  }
-});
+// const db = new sqlite3.Database('data.db', (err) => {
+//   if (err) {
+//     console.log('Error Opening Database: ', err.message);
+//   } else {
+//     console.log('Connected to the DB');
+//   }
+// });
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.WSPORT ? Number(process.env.WSPORT) : 4000;
@@ -30,8 +30,8 @@ let letClientAnswer = false;
 let pauseGame = false;
 wss.on('connection', (socket) => {
   socket.on('message', (message) => {
-    let totalReferee = Object.keys(referees).length;
-    let totalClient = Object.keys(clients).length;
+    const totalReferee = Object.keys(referees).length;
+    const totalClient = Object.keys(clients).length;
     const msg = message
       .toString()
       .split("'")
@@ -138,7 +138,7 @@ wss.on('connection', (socket) => {
       // if (answer === 'a') totalClientAnswerA++;
       clients[deviceId] = {
         ws: socket,
-        deviceId: msg.id,
+        deviceId,
         answer,
         latestUpdate: new Date(),
       };
@@ -169,12 +169,12 @@ wss.on('connection', (socket) => {
       const answer = msg[5];
       if (answer === 'b') totalB++;
       if (answer === 'a') totalA++;
-      let answers = referees[deviceId].answer
+      const answers = referees[deviceId].answer
         ? [...referees[deviceId].answer, answer]
         : [answer];
       referees[deviceId] = {
         ws: socket,
-        deviceId: msg.id,
+        deviceId,
         answer: answers,
       };
       showSevenSegmentNumbers();
@@ -221,20 +221,23 @@ wss.on('connection', (socket) => {
       showSevenSegmentNumbers();
     }
     calculateTotals();
-    syncOperator(
-      JSON.stringify({
-        type: 'syncTotal',
-        total: totalReferee + totalClient,
-        totalA,
-        totalB,
-        totalClient,
-        totalReferee,
-        totalRefereeAnswerA: totalAnswerA,
-        totalRefereeAnswerb: totalAnswerB,
-        totalClientAnswerA,
-        totalClientAnswerB,
-      })
-    );
+    if (!type.includes('register')) {
+      syncOperator(
+        JSON.stringify({
+          type: 'syncTotal',
+          total: totalReferee + totalClient,
+          totalA,
+          totalB,
+          totalClient,
+          refereeObj: referees,
+          totalReferee,
+          totalRefereeAnswerA: totalAnswerA,
+          totalRefereeAnswerb: totalAnswerB,
+          totalClientAnswerA,
+          totalClientAnswerB,
+        })
+      );
+    }
   });
   socket.on('close', (e) => {
     console.log('WebSocket client disconnected', e);

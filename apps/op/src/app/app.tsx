@@ -55,7 +55,9 @@ export function App() {
     totalA: 0,
     totalB: 0,
   });
-
+  const [refereeOne, setRefereeOne] = useState({ red: 0, blue: 0 });
+  const [refereeTwo, setRefereeTwo] = useState({ red: 0, blue: 0 });
+  const [refereeThree, setRefereeThree] = useState({ red: 0, blue: 0 });
   ws.onopen = (event) => {
     console.log('open socket', event);
     ws.send("'type':'registerOperator'");
@@ -68,9 +70,37 @@ export function App() {
   ws.onmessage = (message) => {
     const msg = JSON.parse(message.data);
     console.log('operator panel ===>', message);
+    console.log('msg ===>', msg);
     if (msg.type === 'syncTotal') {
-      // console.log(msg.totalA);
-      // console.log(msg.totalB);
+      Object.keys(msg.refereeObj).forEach((item) => {
+        if (Number(item) === 3) {
+          const filterA = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'a'
+          );
+          const filterB = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'b'
+          );
+          setRefereeThree({ red: filterB.length, blue: filterA.length });
+        }
+        if (Number(item) === 2) {
+          const filterA = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'a'
+          );
+          const filterB = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'b'
+          );
+          setRefereeTwo({ red: filterB.length, blue: filterA.length });
+        }
+        if (Number(item) === 1) {
+          const filterA = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'a'
+          );
+          const filterB = msg.refereeObj[item].answer.filter(
+            (i: 'a' | 'b') => i === 'b'
+          );
+          setRefereeOne({ red: filterB.length, blue: filterA.length });
+        }
+      });
       setTotal({
         referee: Number(msg.totalReferee),
         client: Number(msg.totalClient),
@@ -91,17 +121,36 @@ export function App() {
   return (
     <>
       <div className={'bg-[#017338] py-8'}>
-        <Container className="flex pb-5">
-          <AnswerBox
-            title="شرکت کنندگان"
-            blue={total.clientsA}
-            red={total.clientsB}
-          />
-          <AnswerBox
-            title="داوران"
-            blue={total.refereeA}
-            red={total.refereeB}
-          />
+        <Container className="pb-5">
+          <div className="flex">
+            <AnswerBox
+              title="شرکت کنندگان"
+              blue={total.clientsA}
+              red={total.clientsB}
+            />
+            <AnswerBox
+              title="جمع کل داوران"
+              blue={total.refereeA}
+              red={total.refereeB}
+            />
+          </div>
+          <div className="flex pt-8">
+            <AnswerBox
+              title="داور ۱"
+              blue={refereeOne.blue}
+              red={refereeOne.red}
+            />
+            <AnswerBox
+              title="داور ۲"
+              blue={refereeTwo.blue}
+              red={refereeTwo.red}
+            />
+            <AnswerBox
+              title="داور ۳"
+              blue={refereeThree.blue}
+              red={refereeThree.red}
+            />
+          </div>
           {/* <div className={'px-3'}>
             <p className="text-red-50 text-4xl pb-2">تعداد کل شرکت کنندگان</p>
             <div className="bg-teal-100 px-5 py-4 rounded-md">
@@ -225,7 +274,7 @@ export function App() {
               }}
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
             >
-              حرکت جعبه پول
+              شعله ورود
             </button>
             <button
               onClick={() => {
@@ -233,7 +282,7 @@ export function App() {
               }}
               className="bg-blue-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
             >
-              حرکت به سمت آبی
+              شروع حرکت جعبه
             </button>
             <button
               onClick={() => {
@@ -241,7 +290,7 @@ export function App() {
               }}
               className="bg-red-600 py-3 px-5 mx-3 rounded-md text-[#fff]"
             >
-              حرکت به سمت قرمز
+              توقف حرکت جعبه
             </button>
             <button
               onClick={() => {
@@ -249,7 +298,7 @@ export function App() {
               }}
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
             >
-              باز شدن
+              باز شدن جعبه
             </button>
           </div>
         </Container>
