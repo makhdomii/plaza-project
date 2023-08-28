@@ -163,7 +163,12 @@ wss.on('connection', (socket) => {
     }
     if (type === 'registerReferee') {
       const userId = 'referee_' + generateId();
-      referees[deviceId] = { ws: socket, deviceId: deviceId, userId };
+      referees[deviceId] = {
+        ws: socket,
+        deviceId: deviceId,
+        userId,
+        answer: [],
+      };
     }
     if (type === 'answerReferee') {
       const answer = msg[5];

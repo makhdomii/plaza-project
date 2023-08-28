@@ -74,28 +74,28 @@ export function App() {
     if (msg.type === 'syncTotal') {
       Object.keys(msg.refereeObj).forEach((item) => {
         if (Number(item) === 3) {
-          const filterA = msg.refereeObj[item].answer.filter(
+          const filterA = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'a'
           );
-          const filterB = msg.refereeObj[item].answer.filter(
+          const filterB = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'b'
           );
           setRefereeThree({ red: filterB.length, blue: filterA.length });
         }
         if (Number(item) === 2) {
-          const filterA = msg.refereeObj[item].answer.filter(
+          const filterA = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'a'
           );
-          const filterB = msg.refereeObj[item].answer.filter(
+          const filterB = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'b'
           );
           setRefereeTwo({ red: filterB.length, blue: filterA.length });
         }
         if (Number(item) === 1) {
-          const filterA = msg.refereeObj[item].answer.filter(
+          const filterA = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'a'
           );
-          const filterB = msg.refereeObj[item].answer.filter(
+          const filterB = msg.refereeObj[item]?.answer?.filter(
             (i: 'a' | 'b') => i === 'b'
           );
           setRefereeOne({ red: filterB.length, blue: filterA.length });
