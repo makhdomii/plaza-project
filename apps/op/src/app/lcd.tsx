@@ -5,7 +5,7 @@ import { Blue } from './blue';
 import sound from './sound.mp3';
 import refereeSound from './refereeSound.mp3';
 
-const ws = new WebSocket('ws://localhost:4000');
+const ws = new WebSocket('ws://192.168.10.100:4000');
 
 export function LCD() {
   const [total, setTotal] = useState({

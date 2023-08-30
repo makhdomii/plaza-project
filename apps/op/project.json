@@ -53,7 +53,7 @@
         "hmr": true,
         "port": 3000,
         "allowedHosts": "all",
-        // "host": "192.168.10.100"
+        "host": "192.168.10.100"
       },
       "configurations": {
         "development": {
