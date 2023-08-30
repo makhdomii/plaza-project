@@ -4,7 +4,6 @@ type CountDownType = {
   seconds: number;
 };
 export const Num = ({ seconds }: CountDownType) => {
-  console.log(seconds);
   function changeTime() {
     const sec = Number(seconds);
     const minutes = Math.floor(sec / 60);

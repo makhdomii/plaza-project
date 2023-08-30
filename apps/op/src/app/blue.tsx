@@ -4,7 +4,6 @@ type CountDownType = {
   seconds: number;
 };
 export const Blue = ({ seconds }: CountDownType) => {
-  console.log(seconds);
   function changeTime() {
     const sec = Number(seconds);
     const minutes = Math.floor(sec / 60);
@@ -17,7 +16,6 @@ export const Blue = ({ seconds }: CountDownType) => {
     document
       .getElementById('blue-2')
       ?.setAttribute('class', 'blue-' + formattedSeconds.substr(1, 1));
-    console.log(document.getElementById('blue-2')?.getAttribute('class'));
   }
   useEffect(() => {
     changeTime();

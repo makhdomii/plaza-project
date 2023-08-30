@@ -4,7 +4,7 @@ import refreshIc from '../assets/refresh.svg';
 // import './reset.css';
 import classname from 'classnames';
 import styles from './app.module.scss';
-const ws = new WebSocket('ws://192.168.10.100:4000');
+const ws = new WebSocket('ws://localhost:4000');
 type LEDType = {
   num: number;
   setNum: (answer: number) => void;
