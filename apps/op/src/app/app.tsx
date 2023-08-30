@@ -136,17 +136,17 @@ export function App() {
           </div>
           <div className="flex pt-8">
             <AnswerBox
-              title="داور ۱"
+              title="آقای سیرانی"
               blue={refereeOne.blue}
               red={refereeOne.red}
             />
             <AnswerBox
-              title="داور ۲"
+              title="آقای یونچی"
               blue={refereeTwo.blue}
               red={refereeTwo.red}
             />
             <AnswerBox
-              title="داور ۳"
+              title="خانم مهرنوش"
               blue={refereeThree.blue}
               red={refereeThree.red}
             />
