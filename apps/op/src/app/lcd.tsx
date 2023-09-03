@@ -6,6 +6,7 @@ import sound from './sound.mp3';
 import refereeSound from './refereeSound.mp3';
 
 const ws = new WebSocket('ws://192.168.10.100:4000');
+// const ws = new WebSocket('ws://localhost:4000');
 
 export function LCD() {
   const [total, setTotal] = useState({
@@ -13,7 +14,7 @@ export function LCD() {
     totalB: 0,
   });
   const [load, setLoad] = useState(false);
-  const [refereeCoinActive, setRefereeCoinActive] = useState(false);
+  const [refereeCoinActive, setRefereeCoinActive] = useState(true);
   function downloadCoin() {
     setRefereeCoinActive(false);
     const xhr = new XMLHttpRequest();
@@ -67,7 +68,7 @@ export function LCD() {
   useEffect(() => {
     if (!load) {
       setLoad(true);
-      downloadCoin();
+      downloadRefereeCoin();
     }
   }, [load]);
   ws.onopen = (event) => {

@@ -160,6 +160,21 @@ wss.on('connection', (socket) => {
     if (type === 'registerOperator') {
       const userId = 'operator_' + generateId();
       operator[userId] = { ws: socket, userId };
+      syncOperator(
+        JSON.stringify({
+          type: 'syncTotal',
+          total: totalReferee + totalClient,
+          totalA,
+          totalB,
+          totalClient,
+          refereeObj: referees,
+          totalReferee,
+          totalRefereeAnswerA: totalAnswerA,
+          totalRefereeAnswerb: totalAnswerB,
+          totalClientAnswerA,
+          totalClientAnswerB,
+        })
+      );
     }
     if (type === 'registerReferee') {
       const userId = 'referee_' + generateId();
@@ -196,24 +211,6 @@ wss.on('connection', (socket) => {
     if (type === 'setTotalNumOperator') {
       const a = msg[3];
       const b = msg[5];
-      // const totalAInterval = setInterval(() => {
-      //   if (Number(totalA) === Number(a)) {
-      //     clearInterval(totalAInterval);
-      //     return;
-      //   } else {
-      //     console.log('interval started');
-      //     plusObj['numA'](totalA++);
-      //     showSevenSegmentNumbers();
-      //   }
-      // }, 500);
-      // setInterval(() => {
-      //   if (Number(totalB) === Number(b)) {
-      //     // clearInterval(totalBInterval);
-      //     return;
-      //   } else {
-      //     plusObj['numB'](totalB++);
-      //   }
-      // }, 500);
       plusObj['numA'](a);
       plusObj['numB'](b);
       showSevenSegmentNumbers();

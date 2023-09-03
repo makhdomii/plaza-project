@@ -5,6 +5,7 @@ import refreshIc from '../assets/refresh.svg';
 import classname from 'classnames';
 import styles from './app.module.scss';
 const ws = new WebSocket('ws://192.168.10.100:4000');
+// const ws = new WebSocket('ws://localhost:4000');
 type LEDType = {
   num: number;
   setNum: (answer: number) => void;
@@ -63,9 +64,10 @@ export function App() {
     ws.send("'type':'registerOperator'");
   };
   // useEffect(() => {
-  //   return () => {
-  //     ws.close();
-  //   };
+  //   ws.send("'type':'syncOperator'");
+  //   // return () => {
+  //   //   ws.close();
+  //   // };
   // }, []);
   ws.onmessage = (message) => {
     const msg = JSON.parse(message.data);
@@ -151,23 +153,6 @@ export function App() {
               red={refereeThree.red}
             />
           </div>
-          {/* <div className={'px-3'}>
-            <p className="text-red-50 text-4xl pb-2">تعداد کل شرکت کنندگان</p>
-            <div className="bg-teal-100 px-5 py-4 rounded-md">
-              <p className="text-center text-3xl">{total.client}</p>
-            </div>
-          </div>
-          <div className={'px-3'}>
-            <p className="text-red-50 text-4xl pb-2">تعداد کل داوران</p>
-            <div className="bg-teal-100 px-5 py-4 rounded-md">
-              <p className="text-center text-3xl">{total.referee}</p>
-            </div>
-          </div> */}
-          {/* <div className={'mr-9 '}>
-            <button className={'p-3 mt-8 mr-5 bg-[#fff] rounded-md'}>
-              <img className="w-6" src={refreshIc} />
-            </button>
-          </div> */}
         </Container>
       </div>
       <div className={'bg-[#fbb017] py-10 flex'}>
@@ -207,9 +192,31 @@ export function App() {
                   alert('اعداد وارد شده بیشتر از حد مجاز میباشد');
                   return;
                 }
-                ws.send(
-                  `{'type':'setTotalNumOperator', 'numA':'${blue.value}', 'numB':'${red.value}'}`
-                );
+                let a = Number(total.totalA);
+                let b = Number(total.totalB);
+                const blueVal = Number(blue.value);
+                const redVal = Number(red.value);
+                const interVal = setInterval(() => {
+                  if (a < blueVal) {
+                    a = a + 1;
+                    ws.send(
+                      `{'type':'setTotalNumOperator', 'numA':'${a}', 'numB':'${b}'}`
+                    );
+                  }
+                  if (b < redVal) {
+                    b = b + 1;
+                    ws.send(
+                      `{'type':'setTotalNumOperator', 'numA':'${a}', 'numB':'${b}'}`
+                    );
+                  }
+                  if (a >= blueVal && b >= redVal) {
+                    clearInterval(interVal);
+                    return;
+                  }
+                }, 500);
+                // ws.send(
+                //   `{'type':'setTotalNumOperator', 'numA':'${blue.value}', 'numB':'${red.value}'}`
+                // );
                 red.value = '';
                 blue.value = '';
               }}
