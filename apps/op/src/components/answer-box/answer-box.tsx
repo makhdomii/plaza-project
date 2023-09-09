@@ -7,8 +7,8 @@ type AnswerBoxType = {
 };
 export const AnswerBox = ({ blue, red, title }: AnswerBoxType) => {
   return (
-    <div className={classname('w-1/3 px-3', styles['answer-box'])}>
-      <p className="text-red-50">{title}</p>
+    <div className={classname('md:w-1/3 w-1/6 px-3', styles['answer-box'])}>
+      <p className="text-lg pb-3 text-center">{title}</p>
       <div
         className={classname(
           ' rounded-md overflow-hidden',

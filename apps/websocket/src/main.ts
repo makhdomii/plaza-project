@@ -28,6 +28,13 @@ const hardware = {
 };
 let letClientAnswer = false;
 let pauseGame = false;
+let totalDevices = {
+  hardware: 0,
+  sevenSegments: 0,
+  operator: 0,
+  client: 0,
+  referee: 0,
+};
 wss.on('connection', (socket) => {
   socket.on('message', (message) => {
     const totalReferee = Object.keys(referees).length;
@@ -58,28 +65,9 @@ wss.on('connection', (socket) => {
     if (type === 'pauseContest') {
       pauseGame = true;
     }
-    if (pauseGame) {
-      return;
-    }
-
-    if (type === 'startContest') {
-      letClientAnswer = true;
-    }
-    if (type === 'pullDownSSg') {
-      hardware['1'].ws.send('a');
-    }
-    if (type === 'moveBox') {
-      hardware['2'].ws.send('b');
-    }
-    if (type === 'boxOnA') {
-      hardware['2'].ws.send('c');
-    }
-    if (type === 'boxOnB') {
-      hardware['2'].ws.send('d');
-    }
-    if (type === 'openBox') {
-      hardware['2'].ws.send('e');
-    }
+    // if (pauseGame) {
+    //   return;
+    // }
     function showSevenSegmentNumbers() {
       Object.keys(sevenSegments).forEach((item) => {
         if (sevenSegments[item].deviceId === '1') {
@@ -105,100 +93,131 @@ wss.on('connection', (socket) => {
           totalClientAnswerB = totalClientAnswerB + 1;
       });
     }
-    // const messageType = {
-    //   registerClient: () => {},
-    //   answerClient: () => {},
-    //   registerHardware: () => {},
-    //   registerSevenSegment: () => {},
-    //   registerOperator: () => {},
-    //   registerReferee: () => {},
-    //   answerReferee: () => {},
-    //   setTotalNumOperator: () => {},
-    //   SetNumOperator: () => {},
-    //   generateFake: () => {},
-    // };
-    if (type === 'registerClient') {
-      const userId = 'client_' + generateId();
-      clients[userId] = { ws: socket, userId, deviceId, answer: null };
-    }
-    if (type === 'answerClient' && letClientAnswer) {
-      // if (
-      //   clients[deviceId] &&
-      //   clients[deviceId].answer &&
-      //   typeof clients[deviceId].answer === 'string'
-      // ) {
-      //   return;
-      // } else {
+    const messageType = {
+      registerClient: () => {
+        const userId = 'client_' + generateId();
+        totalDevices.client = totalDevices.client + 1;
+        clients[userId] = { ws: socket, userId, deviceId, answer: null };
+      },
+      answerClient: () => {
+        if (!letClientAnswer) return;
+        if (deviceId && clients[deviceId] && clients[deviceId].answer) {
+          return;
+        }
+        const answer = msg[5];
+        clients[deviceId] = {
+          ws: socket,
+          deviceId,
+          answer,
+          latestUpdate: new Date(),
+        };
+      },
+      registerHardware: () => {
+        totalDevices.hardware = totalDevices.hardware + 1;
+        hardware[deviceId] = { deviceId, ws: socket };
+      },
+      registerSevenSegment: () => {
+        const userId = 'ssg_' + generateId();
+        totalDevices.sevenSegments = totalDevices.sevenSegments + 1;
+        sevenSegments[userId] = { ws: socket, deviceId, userId };
+        showSevenSegmentNumbers();
+      },
+      registerOperator: () => {
+        const userId = 'operator_' + generateId();
+        operator[userId] = { ws: socket, userId };
+        totalDevices.operator = totalDevices.operator + 1;
+        syncOperator(
+          JSON.stringify({
+            type: 'syncTotal',
+            total: totalReferee + totalClient,
+            totalA,
+            totalB,
+            totalClient,
+            refereeObj: referees,
+            totalReferee,
+            totalRefereeAnswerA: totalAnswerA,
+            totalRefereeAnswerb: totalAnswerB,
+            totalClientAnswerA,
+            totalClientAnswerB,
+          })
+        );
+      },
+      registerReferee: () => {
+        const userId = 'referee_' + generateId();
+        totalDevices.referee = totalDevices.referee + 1;
+        referees[deviceId] = {
+          ws: socket,
+          deviceId: deviceId,
+          userId,
+          answer: [],
+        };
+      },
+      answerReferee: () => {
+        if (pauseGame) return;
+        const answer = msg[5];
+        if (answer === 'b') totalB++;
+        if (answer === 'a') totalA++;
+        const answers = referees[deviceId].answer
+          ? [...referees[deviceId].answer, answer]
+          : [answer];
+        referees[deviceId] = {
+          ws: socket,
+          deviceId,
+          answer: answers,
+        };
+        showSevenSegmentNumbers();
+      },
+      setTotalNumOperator: () => {
+        const a = msg[3];
+        const b = msg[5];
+        plusObj['numA'](a);
+        plusObj['numB'](b);
+        showSevenSegmentNumbers();
+      },
+      SetNumOperator: () => {
+        const t = msg[3];
+        const numberType = msg[2];
 
-      if (deviceId && clients[deviceId] && clients[deviceId].answer) {
-        return;
-      }
-      const answer = msg[5];
-      // if (answer === 'b') totalClientAnswerB++;
-      // if (answer === 'a') totalClientAnswerA++;
-      clients[deviceId] = {
-        ws: socket,
-        deviceId,
-        answer,
-        latestUpdate: new Date(),
-      };
-      // }
-    }
-
-    if (type === 'registerHardware') {
-      hardware[deviceId] = { deviceId, ws: socket };
-      console.log('hardware connected');
-    }
-    if (type === 'registerSevenSegment') {
-      const userId = 'ssg_' + generateId();
-      sevenSegments[userId] = { ws: socket, deviceId, userId };
-      // if (totalA > 0 || totalB > 0) {
-      console.log('segment number should update');
-      showSevenSegmentNumbers();
-      // }
-    }
-    if (type === 'registerOperator') {
-      const userId = 'operator_' + generateId();
-      operator[userId] = { ws: socket, userId };
-      syncOperator(
-        JSON.stringify({
-          type: 'syncTotal',
-          total: totalReferee + totalClient,
-          totalA,
-          totalB,
-          totalClient,
-          refereeObj: referees,
-          totalReferee,
-          totalRefereeAnswerA: totalAnswerA,
-          totalRefereeAnswerb: totalAnswerB,
-          totalClientAnswerA,
-          totalClientAnswerB,
-        })
-      );
-    }
-    if (type === 'registerReferee') {
-      const userId = 'referee_' + generateId();
-      referees[deviceId] = {
-        ws: socket,
-        deviceId: deviceId,
-        userId,
-        answer: [],
-      };
-    }
-    if (type === 'answerReferee') {
-      const answer = msg[5];
-      if (answer === 'b') totalB++;
-      if (answer === 'a') totalA++;
-      const answers = referees[deviceId].answer
-        ? [...referees[deviceId].answer, answer]
-        : [answer];
-      referees[deviceId] = {
-        ws: socket,
-        deviceId,
-        answer: answers,
-      };
-      showSevenSegmentNumbers();
-    }
+        plusObj[numberType](t);
+        showSevenSegmentNumbers();
+      },
+      resetContest: () => {
+        totalA = 0;
+        totalB = 0;
+        letClientAnswer = false;
+        pauseGame = false;
+        Object.keys(referees).forEach((item) => {
+          referees[item].answer = [];
+        });
+        Object.keys(clients).forEach((item) => {
+          clients[item].answer = '';
+        });
+      },
+      playContest: () => {
+        pauseGame = false;
+      },
+      pauseContest: () => {
+        pauseGame = true;
+      },
+      startContest: () => {
+        letClientAnswer = true;
+      },
+      pullDownSSg: () => {
+        hardware['1'].ws.send('a');
+      },
+      moveBox: () => {
+        hardware['2'].ws.send('b');
+      },
+      boxOnA: () => {
+        hardware['2'].ws.send('c');
+      },
+      boxOnB: () => {
+        hardware['2'].ws.send('d');
+      },
+      openBox: () => {
+        hardware['2'].ws.send('e');
+      },
+    };
     const plusObj = {
       numB: (t) => {
         totalB = t;
@@ -207,22 +226,15 @@ wss.on('connection', (socket) => {
         totalA = t;
       },
     };
-
-    if (type === 'setTotalNumOperator') {
-      const a = msg[3];
-      const b = msg[5];
-      plusObj['numA'](a);
-      plusObj['numB'](b);
-      showSevenSegmentNumbers();
-    }
-    if (type === 'SetNumOperator') {
-      const t = msg[3];
-      const numberType = msg[2];
-
-      plusObj[numberType](t);
-      showSevenSegmentNumbers();
-    }
+    messageType[type]();
     calculateTotals();
+    if (type.includes('register')) {
+      Object.keys(operator).forEach((item) => {
+        operator[item].ws.send(
+          JSON.stringify({ type: 'syncRegisters', totalDevices })
+        );
+      });
+    }
     if (!type.includes('register')) {
       syncOperator(
         JSON.stringify({

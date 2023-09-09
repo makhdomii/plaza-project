@@ -1,25 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Container, AnswerBox } from '../components';
-import refreshIc from '../assets/refresh.svg';
-// import './reset.css';
-import classname from 'classnames';
-import styles from './app.module.scss';
+
 const ws = new WebSocket('ws://192.168.10.100:4000');
-// const ws = new WebSocket('ws://localhost:4000');
+
 type LEDType = {
   num: number;
   setNum: (answer: number) => void;
-  title: string;
+  color: string;
 };
-const LED = ({ setNum, num, title }: LEDType) => {
+const LED = ({ setNum, num, color }: LEDType) => {
   const [number, setNumber] = useState(num);
   useEffect(() => {
     setNumber(num);
   }, [num, number]);
   return (
     <div>
-      <p className="text-center text-xl">{title}</p>
-      <div className="flex ml-7 rounded-2xl overflow-hidden justify-center items-center bg-dark-200">
+      <div
+        className="flex ml-7 rounded-2xl overflow-hidden justify-center items-center bg-dark-200"
+        style={{ backgroundColor: color }}
+      >
         <button
           className="px-5 py-3 text-5xl bg-grape-50 hover:bg-opacity-70 hover:shadow-md"
           onClick={() => {
@@ -29,7 +28,7 @@ const LED = ({ setNum, num, title }: LEDType) => {
         >
           +
         </button>
-        <div className="px-5 py-3 text-3xl text-[#fff]">{number}</div>
+        <div className={'px-5 py-3 text-3xl text-[#fff]'}>{number}</div>
         <button
           className="px-5 py-3 bg-grape-50 text-5xl hover:bg-opacity-70 hover:shadow-md"
           onClick={() => {
@@ -44,6 +43,49 @@ const LED = ({ setNum, num, title }: LEDType) => {
   );
 };
 
+const manageContest = [
+  {
+    name: 'نگه داشتن مسابقه',
+    socketMessage: "'type':'pauseContest'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'ادامه مسابقه',
+    socketMessage: "'type':'playContest'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'شروع رای گیری',
+    socketMessage: "'type':'startContest'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'پایین آمدن شمارشگر',
+    socketMessage: "'type':'pullDownSSg'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'شعله ورود',
+    socketMessage: "'type':'moveBox'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'شروع حرکت جعبه',
+    socketMessage: "'type':'boxOnA'",
+    color: 'bg-blue-600 ',
+  },
+  {
+    name: 'توقف حرکت جعبه',
+    socketMessage: "'type':'boxOnB'",
+    color: 'bg-red-600 ',
+  },
+  {
+    name: 'باز شدن جعبه',
+    socketMessage: "'type':'openBox'",
+    color: 'bg-[#017338] ',
+  },
+];
+
 export function App() {
   const [total, setTotal] = useState({
     referee: 0,
@@ -56,6 +98,13 @@ export function App() {
     totalA: 0,
     totalB: 0,
   });
+  const [devices, setDevices] = useState({
+    hardware: 0,
+    sevenSegments: 0,
+    operator: 0,
+    client: 0,
+    referee: 0,
+  });
   const [refereeOne, setRefereeOne] = useState({ red: 0, blue: 0 });
   const [refereeTwo, setRefereeTwo] = useState({ red: 0, blue: 0 });
   const [refereeThree, setRefereeThree] = useState({ red: 0, blue: 0 });
@@ -63,45 +112,25 @@ export function App() {
     console.log('open socket', event);
     ws.send("'type':'registerOperator'");
   };
-  // useEffect(() => {
-  //   ws.send("'type':'syncOperator'");
-  //   // return () => {
-  //   //   ws.close();
-  //   // };
-  // }, []);
+
   ws.onmessage = (message) => {
     const msg = JSON.parse(message.data);
-    console.log('operator panel ===>', message);
-    console.log('msg ===>', msg);
+    if (msg.type === 'syncRegisters') {
+    }
     if (msg.type === 'syncTotal') {
       Object.keys(msg.refereeObj).forEach((item) => {
-        if (Number(item) === 3) {
-          const filterA = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'a'
-          );
-          const filterB = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'b'
-          );
+        const filterA = msg.refereeObj[item]?.answer?.filter(
+          (i: 'a' | 'b') => i === 'a'
+        );
+        const filterB = msg.refereeObj[item]?.answer?.filter(
+          (i: 'a' | 'b') => i === 'b'
+        );
+        if (Number(item) === 3)
           setRefereeThree({ red: filterB.length, blue: filterA.length });
-        }
-        if (Number(item) === 2) {
-          const filterA = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'a'
-          );
-          const filterB = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'b'
-          );
+        if (Number(item) === 2)
           setRefereeTwo({ red: filterB.length, blue: filterA.length });
-        }
-        if (Number(item) === 1) {
-          const filterA = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'a'
-          );
-          const filterB = msg.refereeObj[item]?.answer?.filter(
-            (i: 'a' | 'b') => i === 'b'
-          );
+        if (Number(item) === 1)
           setRefereeOne({ red: filterB.length, blue: filterA.length });
-        }
       });
       setTotal({
         referee: Number(msg.totalReferee),
@@ -115,16 +144,61 @@ export function App() {
         totalB: Number(msg.totalB),
       });
     }
-    if (msg.type === 'totalRefereeAnswer') {
-      // setTotalReferee(Number(msg.totalReferee));
-      // setTotalClient(Number(msg.totalClient));
-    }
+  };
+  ws.onerror = (event) => {
+    console.log('error => ', event);
+  };
+  ws.onclose = (event) => {
+    let reason;
+    // alert(event.code);
+    // See https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+    if (event.code === 1000)
+      reason =
+        '1000 indicates a normal closure, meaning that the purpose for which the connection was established has been fulfilled.';
+    else if (event.code === 1001)
+      reason =
+        '1001 indicates that an endpoint is "going away", such as a server going down or a browser having navigated away from a page.';
+    else if (event.code === 1002)
+      reason =
+        '1002 indicates that an endpoint is terminating the connection due to a protocol error';
+    else if (event.code === 1003)
+      reason =
+        '1003 indicates that an endpoint is terminating the connection because it has received a type of data it cannot accept (e.g., an endpoint that understands only text data MAY send this if it receives a binary message).';
+    else if (event.code === 1004)
+      reason = 'Reserved. The specific meaning might be defined in the future.';
+    else if (event.code === 1005)
+      reason = 'No status code was actually present.';
+    else if (event.code === 1006)
+      reason =
+        'The connection was closed abnormally, e.g., without sending or receiving a Close control frame';
+    else if (event.code === 1007)
+      reason =
+        'An endpoint is terminating the connection because it has received data within a message that was not consistent with the type of the message (e.g., non-UTF-8 [https://www.rfc-editor.org/rfc/rfc3629] data within a text message).';
+    else if (event.code === 1008)
+      reason =
+        'An endpoint is terminating the connection because it has received a message that "violates its policy". This reason is given either if there is no other sutible reason, or if there is a need to hide specific details about the policy.';
+    else if (event.code === 1009)
+      reason =
+        'An endpoint is terminating the connection because it has received a message that is too big for it to process.';
+    else if (event.code === 1010)
+      // Note that this status code is not used by the server, because it can fail the WebSocket handshake instead.
+      reason =
+        "An endpoint (client) is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn't return them in the response message of the WebSocket handshake. <br /> Specifically, the extensions that are needed are: " +
+        event.reason;
+    else if (event.code === 1011)
+      reason =
+        'A server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request.';
+    else if (event.code === 1015)
+      reason =
+        "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
+    else reason = 'Unknown reason';
+    console.error('closed => ', reason);
   };
   return (
     <>
-      <div className={'bg-[#017338] py-8'}>
+      <div className={'py-8'}>
         <Container className="pb-5">
-          <div className="flex">
+          <div className="flex flex-wrap">
             <AnswerBox
               title="شرکت کنندگان"
               blue={total.clientsA}
@@ -135,8 +209,8 @@ export function App() {
               blue={total.refereeA}
               red={total.refereeB}
             />
-          </div>
-          <div className="flex pt-8">
+            {/* </div>
+          <div className="flex pt-8"> */}
             <AnswerBox
               title="آقای سیرانی"
               blue={refereeOne.blue}
@@ -155,24 +229,24 @@ export function App() {
           </div>
         </Container>
       </div>
-      <div className={'bg-[#fbb017] py-10 flex'}>
-        <Container>
+      <Container className="flex flex-wrap">
+        <div className={'bg-[#fbb017] py-10 md:w-full lg:w-1/2'}>
           <p className="pb-5 text-lg">تنظیمات نمایشگر</p>
-          <div className="flex justify-around pb-5 items-center">
-            <div className="flex">
+          <div className="pb-5 text-center">
+            <div className="flex justify-center pb-10">
               <LED
                 num={total.totalA}
                 setNum={function (answerA: number) {
                   ws.send(`{'type':'SetNumOperator', 'numA':'${answerA}'}`);
                 }}
-                title="آبی"
+                color="#1d5d9b"
               />
               <LED
                 num={total.totalB}
                 setNum={function (answerA: number) {
                   ws.send(`{'type':'SetNumOperator', 'numB':'${answerA}'}`);
                 }}
-                title="قرمز"
+                color="#f31559"
               />
             </div>
             <form
@@ -180,22 +254,12 @@ export function App() {
               onSubmit={(event) => {
                 event.preventDefault();
                 const { red, blue } = event.currentTarget;
-                if (red.value === '') {
-                  alert('مقدار قرمز را وارد کنید');
-                  return;
-                }
-                if (blue.value === '') {
-                  alert('مقدار آبی را وارد کنید');
-                  return;
-                }
-                if (Number(blue.value) + Number(red.value) > 81) {
-                  alert('اعداد وارد شده بیشتر از حد مجاز میباشد');
-                  return;
-                }
+                const redInput = red.value === '' ? total.totalB : red.value;
+                const blueInput = blue.value === '' ? total.totalA : blue.value;
                 let a = Number(total.totalA);
                 let b = Number(total.totalB);
-                const blueVal = Number(blue.value);
-                const redVal = Number(red.value);
+                const blueVal = Number(blueInput);
+                const redVal = Number(redInput);
                 const interVal = setInterval(() => {
                   if (a < blueVal) {
                     a = a + 1;
@@ -238,11 +302,25 @@ export function App() {
               </button>
             </form>
           </div>
-        </Container>
-      </div>
-      <div className={'py-10'}>
-        <Container className="flex justify-between pb-5">
-          <div>
+        </div>
+        <div className={'py-10 md:w-full lg:w-1/2 bg-[#017338]'}>
+          {/* <div> */}
+          {manageContest.map((item, index) => {
+            const width = index < 2 ? 'w-1/2' : 'w-1/3';
+            return (
+              <button
+                key={'game_management_btn_' + index}
+                onClick={() => {
+                  ws.send(item.socketMessage);
+                }}
+                className={`${item.color} py-8 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
+              >
+                {item.name}
+              </button>
+            );
+          })}
+          {/* </div> */}
+          {/* <div>
             <button
               className="bg-[#017338] py-3 px-5 mx-3 rounded-md text-[#fff]"
               onClick={() => {
@@ -307,9 +385,9 @@ export function App() {
             >
               باز شدن جعبه
             </button>
-          </div>
-        </Container>
-      </div>
+          </div> */}
+        </div>
+      </Container>
     </>
   );
 }
