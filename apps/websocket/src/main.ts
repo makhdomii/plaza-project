@@ -59,16 +59,17 @@ wss.on('connection', (socket) => {
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
     let totalClientAnswerB = 0;
-    if (type === 'playContest') {
-      pauseGame = false;
-    }
-    if (type === 'pauseContest') {
-      pauseGame = true;
-    }
+    // if (type === 'playContest') {
+    //   pauseGame = false;
+    // }
+    // if (type === 'pauseContest') {
+    //   pauseGame = true;
+    // }
     // if (pauseGame) {
     //   return;
     // }
     function showSevenSegmentNumbers() {
+      // calculateTotalAnswers();
       Object.keys(sevenSegments).forEach((item) => {
         if (sevenSegments[item].deviceId === '1') {
           console.log('total B ===> ', totalB);
@@ -80,11 +81,22 @@ wss.on('connection', (socket) => {
         }
       });
     }
+    function calculateTotalAnswers() {
+      totalA = 0;
+      totalB = 0;
+      Object.keys(referees).forEach((item) => {
+        totalA += Number(referees[item].answer.a);
+        totalB += Number(referees[item].answer.b);
+      });
+      // Object.keys(clients).forEach((item) => {
+      //   if (clients[item].answer === 'a') totalA += totalClientAnswerA + 1;
+      //   if (clients[item].answer === 'b') totalB += totalClientAnswerB + 1;
+      // });
+    }
     function calculateTotals() {
       Object.keys(referees).forEach((item) => {
-        const totalAnswers = referees[item].answer ?? [];
-        totalAnswerA += totalAnswers.filter((s) => s === 'a').length;
-        totalAnswerB += totalAnswers.filter((s) => s === 'b').length;
+        totalAnswerA += Number(referees[item].answer.a);
+        totalAnswerB += Number(referees[item].answer.b);
       });
       Object.keys(clients).forEach((item) => {
         if (clients[item].answer === 'a')
@@ -120,6 +132,7 @@ wss.on('connection', (socket) => {
         const userId = 'ssg_' + generateId();
         totalDevices.sevenSegments = totalDevices.sevenSegments + 1;
         sevenSegments[userId] = { ws: socket, deviceId, userId };
+        // calculateTotalAnswers();
         showSevenSegmentNumbers();
       },
       registerOperator: () => {
@@ -149,22 +162,30 @@ wss.on('connection', (socket) => {
           ws: socket,
           deviceId: deviceId,
           userId,
-          answer: [],
+          answer: { a: 0, b: 0 },
         };
       },
       answerReferee: () => {
         if (pauseGame) return;
         const answer = msg[5];
-        if (answer === 'b') totalB++;
-        if (answer === 'a') totalA++;
-        const answers = referees[deviceId].answer
-          ? [...referees[deviceId].answer, answer]
-          : [answer];
-        referees[deviceId] = {
-          ws: socket,
-          deviceId,
-          answer: answers,
-        };
+        // console.log(msg[5]);
+        // console.log(msg[6]);
+        // console.log(msg[7]);
+        // console.log(msg[8]);
+        // Object.keys(referees).
+        // if (answer === 'b') totalB++;
+        // if (answer === 'a') totalA++;
+        // const answers = referees[deviceId].answer
+        //   ? [...referees[deviceId].answer, answer]
+        //   : [answer];
+        // referees[deviceId] = {
+        //   ws: socket,
+        //   deviceId,
+        //   answer: answers,
+        // };
+        referees[deviceId].answer[msg[5]] = msg[7];
+        console.log(referees[deviceId].answer);
+        calculateTotalAnswers();
         showSevenSegmentNumbers();
       },
       setTotalNumOperator: () => {
@@ -177,7 +198,7 @@ wss.on('connection', (socket) => {
       SetNumOperator: () => {
         const t = msg[3];
         const numberType = msg[2];
-
+        console.log(numberType, t);
         plusObj[numberType](t);
         showSevenSegmentNumbers();
       },
@@ -187,7 +208,7 @@ wss.on('connection', (socket) => {
         letClientAnswer = false;
         pauseGame = false;
         Object.keys(referees).forEach((item) => {
-          referees[item].answer = [];
+          referees[item].answer = { a: 0, b: 0 };
         });
         Object.keys(clients).forEach((item) => {
           clients[item].answer = '';

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Container, AnswerBox } from '../components';
+import logo from '../assets/logo.png';
 
 const ws = new WebSocket('ws://192.168.10.100:4000');
 
@@ -44,6 +45,34 @@ const LED = ({ setNum, num, color }: LEDType) => {
 };
 
 const manageContest = [
+  // {
+  //   name: 'شروع برنامه جدید',
+  //   socketMessage: "'type':'pauseContest'",
+  //   color: 'bg-[#017338] ',
+  // },
+
+  {
+    name: 'پایین آمدن شمارشگر',
+    socketMessage: "'type':'pullDownSSg'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'باز شدن جعبه',
+    socketMessage: "'type':'openBox'",
+    color: 'bg-[#017338] ',
+  },
+  {
+    name: 'شروع حرکت جعبه',
+    socketMessage: "'type':'boxOnA'",
+    color: 'bg-blue-600 ',
+  },
+  {
+    name: 'توقف حرکت جعبه',
+    socketMessage: "'type':'boxOnB'",
+    color: 'bg-red-600 ',
+  },
+];
+const mngContest = [
   {
     name: 'نگه داشتن مسابقه',
     socketMessage: "'type':'pauseContest'",
@@ -60,32 +89,11 @@ const manageContest = [
     color: 'bg-[#017338] ',
   },
   {
-    name: 'پایین آمدن شمارشگر',
-    socketMessage: "'type':'pullDownSSg'",
-    color: 'bg-[#017338] ',
-  },
-  {
     name: 'شعله ورود',
     socketMessage: "'type':'moveBox'",
     color: 'bg-[#017338] ',
   },
-  {
-    name: 'شروع حرکت جعبه',
-    socketMessage: "'type':'boxOnA'",
-    color: 'bg-blue-600 ',
-  },
-  {
-    name: 'توقف حرکت جعبه',
-    socketMessage: "'type':'boxOnB'",
-    color: 'bg-red-600 ',
-  },
-  {
-    name: 'باز شدن جعبه',
-    socketMessage: "'type':'openBox'",
-    color: 'bg-[#017338] ',
-  },
 ];
-
 export function App() {
   const [total, setTotal] = useState({
     referee: 0,
@@ -118,19 +126,14 @@ export function App() {
     if (msg.type === 'syncRegisters') {
     }
     if (msg.type === 'syncTotal') {
+      console.log(msg);
       Object.keys(msg.refereeObj).forEach((item) => {
-        const filterA = msg.refereeObj[item]?.answer?.filter(
-          (i: 'a' | 'b') => i === 'a'
-        );
-        const filterB = msg.refereeObj[item]?.answer?.filter(
-          (i: 'a' | 'b') => i === 'b'
-        );
+        const filterA = msg.refereeObj[item]?.answer?.a;
+        const filterB = msg.refereeObj[item]?.answer?.b;
         if (Number(item) === 3)
-          setRefereeThree({ red: filterB.length, blue: filterA.length });
-        if (Number(item) === 2)
-          setRefereeTwo({ red: filterB.length, blue: filterA.length });
-        if (Number(item) === 1)
-          setRefereeOne({ red: filterB.length, blue: filterA.length });
+          setRefereeThree({ red: filterB, blue: filterA });
+        if (Number(item) === 2) setRefereeTwo({ red: filterB, blue: filterA });
+        if (Number(item) === 1) setRefereeOne({ red: filterB, blue: filterA });
       });
       setTotal({
         referee: Number(msg.totalReferee),
@@ -196,7 +199,10 @@ export function App() {
   };
   return (
     <>
-      <div className={'py-8'}>
+      <div className="flex justify-center">
+        <img src={logo} className="w-52" alt="" />
+      </div>
+      <div className={'py-3'}>
         <Container className="pb-5">
           <div className="flex flex-wrap">
             <AnswerBox
@@ -230,7 +236,7 @@ export function App() {
         </Container>
       </div>
       <Container className="flex flex-wrap">
-        <div className={'bg-[#fbb017] py-10 md:w-full lg:w-1/2'}>
+        <div className={'bg-[#fbb017] py-5 md:w-full lg:w-1/2'}>
           <p className="pb-5 text-lg">تنظیمات نمایشگر</p>
           <div className="pb-5 text-center">
             <div className="flex justify-center pb-10">
@@ -303,17 +309,18 @@ export function App() {
             </form>
           </div>
         </div>
-        <div className={'py-10 md:w-full lg:w-1/2 bg-[#017338]'}>
+        <div className={'py-5 md:w-full lg:w-1/2 bg-[#fff]'}>
           {/* <div> */}
           {manageContest.map((item, index) => {
-            const width = index < 2 ? 'w-1/2' : 'w-1/3';
+            // const width = index < 2 ? 'w-1/2' : 'w-1/3';
+            const width = 'w-1/2';
             return (
               <button
                 key={'game_management_btn_' + index}
                 onClick={() => {
                   ws.send(item.socketMessage);
                 }}
-                className={`${item.color} py-8 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
+                className={`${item.color} py-8 px-5 text-[#fff] hover:bg-opacity-70 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
               >
                 {item.name}
               </button>
@@ -388,6 +395,34 @@ export function App() {
           </div> */}
         </div>
       </Container>
+      <Container className="">
+        <div>
+          {mngContest.map((item, index) => {
+            const width = 'w-1/4';
+            return (
+              <button
+                key={'game_management_btn_' + index}
+                onClick={() => {
+                  ws.send(item.socketMessage);
+                }}
+                className={`bg-blue-500 py-8 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
+              >
+                {item.name}
+              </button>
+            );
+          })}
+        </div>
+      </Container>
+      <div className="absolute right-0 top-0">
+        <button
+          onClick={() => {
+            ws.send("'type':'resetContest'");
+          }}
+          className={`bg-red-700 py-8 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out`}
+        >
+          شروع مسابقه جدید
+        </button>
+      </div>
     </>
   );
 }
