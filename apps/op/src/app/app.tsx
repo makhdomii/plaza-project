@@ -3,6 +3,7 @@ import { Container, AnswerBox } from '../components';
 import logo from '../assets/logo.png';
 
 const ws = new WebSocket('ws://192.168.10.100:4000');
+// const ws = new WebSocket('ws://localhost:4000');
 
 type LEDType = {
   num: number;
@@ -309,18 +310,20 @@ export function App() {
             </form>
           </div>
         </div>
-        <div className={'py-5 md:w-full lg:w-1/2 bg-[#fff]'}>
+        <div className={'py-5 md:w-full lg:w-1/2 bg-[#fff] flex flex-wrap'}>
           {/* <div> */}
           {manageContest.map((item, index) => {
             // const width = index < 2 ? 'w-1/2' : 'w-1/3';
-            const width = 'w-1/2';
+            const width = 'calc(50% - 10px)';
             return (
               <button
                 key={'game_management_btn_' + index}
-                onClick={() => {
+                onClick={(e) => {
+                  e.currentTarget.classList.toggle('bg-opacity-30');
                   ws.send(item.socketMessage);
                 }}
-                className={`${item.color} py-8 px-5 text-[#fff] hover:bg-opacity-70 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
+                style={{ width }}
+                className={`${item.color} py-8 my-1 px-5 mx-1 text-[#fff] hover:bg-opacity-70 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out`}
               >
                 {item.name}
               </button>
@@ -396,16 +399,38 @@ export function App() {
         </div>
       </Container>
       <Container className="">
-        <div>
+        <div className="flex w-full justify-between">
           {mngContest.map((item, index) => {
-            const width = 'w-1/4';
+            const width = 'calc(25% - 30px)';
             return (
               <button
                 key={'game_management_btn_' + index}
-                onClick={() => {
+                id={'manageContest_id_' + index}
+                onClick={(e) => {
+                  if (index < 3) {
+                    const target = e.currentTarget.classList;
+                    target.add('bg-opacity-80');
+                    target.add('bg-red-800');
+                    target.add('hover:bg-opacity-90');
+                  }
+                  if (index === 0) {
+                    const secondItem =
+                      document.getElementById('manageContest_id_1')?.classList;
+                    secondItem?.remove('bg-opacity-30');
+                    secondItem?.remove('bg-red-800');
+                    secondItem?.add('hover:bg-opacity-90');
+                  }
+                  if (index === 1) {
+                    const firstItem =
+                      document.getElementById('manageContest_id_0')?.classList;
+                    firstItem?.remove('bg-opacity-30');
+                    firstItem?.remove('bg-red-800');
+                    firstItem?.add('hover:bg-opacity-90');
+                  }
                   ws.send(item.socketMessage);
                 }}
-                className={`bg-blue-500 py-8 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out ${width}`}
+                style={{ width }}
+                className={`bg-blue-500 py-8 mx-1 px-5 text-[#fff] hover:bg-opacity-90 focus:transition active:scale-95 active:bg-green-100 active:bg-opacity-10 ease-out`}
               >
                 {item.name}
               </button>

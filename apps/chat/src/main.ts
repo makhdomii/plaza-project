@@ -51,6 +51,22 @@ wss.on('connection', (ws) => {
           clientId: clientId,
         })
       );
+
+      let list = [];
+      Object.keys(clients).forEach((element) => {
+        if (!element.startsWith('operator_'))
+          list.push({ id: element, name: clients[element].name });
+      });
+      ws.send(JSON.stringify({ type: 'clientList', list: list }));
+
+      // Object.keys(operator).forEach((item) => {
+      //   operator[item].ws.send(
+      //     JSON.stringify({
+      //       type: 'registerClient',
+      //       clientId: clientId,
+      //     })
+      //   );
+      // });
     }
     if (parsedMessage.type === 'startTimer') {
       startCountdown(parsedMessage.user);

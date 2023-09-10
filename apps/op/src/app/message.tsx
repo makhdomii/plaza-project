@@ -6,6 +6,7 @@ import TimerApp from './timer';
 import { ClientList } from './clientList';
 function OperatorApp() {
   const ws = new WebSocket('ws://192.168.10.100:4040');
+  // const ws = new WebSocket('ws://localhost:4040');
   const [clientDetail, setClientDetail] = useState({
     remainingTime: '0',
     clientId: '',
