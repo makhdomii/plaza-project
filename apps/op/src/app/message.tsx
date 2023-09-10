@@ -57,6 +57,13 @@ function OperatorApp() {
 
     return `${formattedMinutes}:${formattedSeconds}`;
   };
+  const pauseCountdown = (id: string) => {
+    const countdownObj = {
+      type: 'pauseTimer',
+      user: id,
+    };
+    ws.send(JSON.stringify(countdownObj));
+  };
   const startCountdown = (id: string) => {
     const countdownObj = {
       type: 'startTimer',
@@ -93,6 +100,7 @@ function OperatorApp() {
               key={'client_list' + index}
               data={item}
               stopCountdown={stopCountdown}
+              pauseCountdown={pauseCountdown}
               startCountdown={startCountdown}
             />
           );

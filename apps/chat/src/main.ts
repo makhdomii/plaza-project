@@ -55,6 +55,9 @@ wss.on('connection', (ws) => {
     if (parsedMessage.type === 'startTimer') {
       startCountdown(parsedMessage.user);
     }
+    if (parsedMessage.type === 'pauseTimer') {
+      pauseCountDown(parsedMessage.user);
+    }
     if (parsedMessage.type === 'operatorMessage') {
       const message = parsedMessage.message;
       sendMessageToClient(parsedMessage.user, message);
@@ -86,9 +89,9 @@ server.listen(port, () => {
 function generateClientId() {
   return Math.random().toString(36).substr(2, 8);
 }
-function pauseCountdown(clientId, duration) {
-  clearInterval(clients[clientId].countdownInterval);
-}
+// function pauseCountdown(clientId, duration) {
+//   clearInterval(clients[clientId].countdownInterval);
+// }
 function startCountdown(clientId) {
   stopCountdown(clientId);
   clients[clientId].ws.send(
@@ -118,6 +121,17 @@ function setCountdownForClient(clientId, duration) {
   startCountdown(clientId);
 }
 
+function pauseCountDown(clientId) {
+  clients[clientId].ws.send(
+    JSON.stringify({
+      type: 'pauseTimer',
+    })
+  );
+  // if (clients[clientId].countdownInterval) {
+  //   clearInterval(clients[clientId].countdownInterval);
+  //   clients[clientId].countdownInterval = null;
+  // }
+}
 function stopCountdown(clientId) {
   clients[clientId].ws.send(
     JSON.stringify({
