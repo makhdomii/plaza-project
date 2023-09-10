@@ -59,17 +59,8 @@ wss.on('connection', (socket) => {
     let totalAnswerB = 0;
     let totalClientAnswerA = 0;
     let totalClientAnswerB = 0;
-    // if (type === 'playContest') {
-    //   pauseGame = false;
-    // }
-    // if (type === 'pauseContest') {
-    //   pauseGame = true;
-    // }
-    // if (pauseGame) {
-    //   return;
-    // }
+
     function showSevenSegmentNumbers() {
-      // calculateTotalAnswers();
       Object.keys(sevenSegments).forEach((item) => {
         if (sevenSegments[item].deviceId === '1') {
           console.log('total B ===> ', totalB);
@@ -88,10 +79,6 @@ wss.on('connection', (socket) => {
         totalA += Number(referees[item].answer.a);
         totalB += Number(referees[item].answer.b);
       });
-      // Object.keys(clients).forEach((item) => {
-      //   if (clients[item].answer === 'a') totalA += totalClientAnswerA + 1;
-      //   if (clients[item].answer === 'b') totalB += totalClientAnswerB + 1;
-      // });
     }
     function calculateTotals() {
       Object.keys(referees).forEach((item) => {
@@ -213,6 +200,8 @@ wss.on('connection', (socket) => {
         Object.keys(clients).forEach((item) => {
           clients[item].answer = '';
         });
+        console.log('///////////////////////////')
+        showSevenSegmentNumbers();
       },
       playContest: () => {
         pauseGame = false;
