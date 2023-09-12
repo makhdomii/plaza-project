@@ -1,33 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-function TimerApp({ letStartTimer = false, pause = false }) {
-  const [startTime, setStartTime] = useState<any | null>(null);
+function TimerApp({ letStartTimer = false, pause = false, reset = false }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
 
   useEffect(() => {
+    if (reset && !letStartTimer) {
+      setTimerRunning(false);
+      setCurrentTime(0);
+    }
     if (pause) {
-      pauseTimer();
+      setTimerRunning(false);
     } else if (letStartTimer) {
       console.log('start timer function called !');
-      startTimer();
+      setTimerRunning(true);
     } else {
-      stopTimer();
+      setTimerRunning(false);
+      setCurrentTime(0);
     }
-    // if (timerRunning && startTime) {
-    //   console.log('timer should start !');
-    //   const intervalId = setInterval(() => {
-    //     const now = Date.now();
-    //     const elapsed = Math.floor((now - startTime) / 1000); // Convert to seconds
-    //     console.log(now - startTime);
-    //     setCurrentTime(elapsed);
-    //   }, 1000);
-
-    //   return () => {
-    //     clearInterval(intervalId);
-    //   };
-    // }
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
 
     if (timerRunning) {
       interval = setInterval(() => {
@@ -36,21 +27,8 @@ function TimerApp({ letStartTimer = false, pause = false }) {
     }
 
     return () => clearInterval(interval);
-  }, [timerRunning, startTime, letStartTimer]);
+  }, [timerRunning, letStartTimer, pause, reset]);
 
-  const startTimer = () => {
-    // const rst = new Date().getTime();
-    // setStartTime(rst);
-    setTimerRunning(true);
-  };
-  const pauseTimer = () => {
-    setTimerRunning(false);
-    // setCurrentTime(0); // Reset timer to 0 when stopped
-  };
-  const stopTimer = () => {
-    setTimerRunning(false);
-    setCurrentTime(0); // Reset timer to 0 when stopped
-  };
   const str_pad_left = (
     string: string | number,
     pad: string | undefined,

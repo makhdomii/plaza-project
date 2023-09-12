@@ -1,172 +1,77 @@
-import WebSocket from 'ws';
-const express = require('express');
-const http = require('http');
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import { Server } from 'socket.io'; // Import Server from socket.io
 
 const app = express();
-const cors = require('cors');
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const io = new Server(server, {
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+  allowEIO3: true,
+});
+
 const port = process.env.CHATPORT ? Number(process.env.CHATPORT) : 4040;
-app.use(cors());
-const clients = {};
-const operator = {};
 
-wss.on('connection', (ws) => {
-  let clientId;
+const users = new Set();
 
-  ws.on('message', (message: string) => {
-    const parsedMessage = JSON.parse(message);
-    console.log(parsedMessage);
-    if (parsedMessage.type === 'clientList') {
-      let list = [];
-      Object.keys(clients).forEach((element) => {
-        if (!element.startsWith('operator_'))
-          list.push({ id: element, name: clients[element].name });
-      });
-      ws.send(JSON.stringify({ type: 'clientList', list: list }));
-    }
-    if (parsedMessage.type === 'registerOperator') {
-      clientId = 'operator_' + generateClientId();
-      operator[clientId] = {
-        ws: ws,
-        countdownInterval: null,
-      };
-      ws.send(
-        JSON.stringify({
-          type: 'operator',
-          id: clientId,
-        })
-      );
-    }
-    if (parsedMessage.type === 'registerClient') {
-      clientId = 'client_' + generateClientId();
-      clients[clientId] = {
-        ws: ws,
-        countdownInterval: null,
-        name: parsedMessage.name,
-      };
-      ws.send(
-        JSON.stringify({
-          type: 'clientId',
-          clientId: clientId,
-        })
-      );
+io.on('connection', (socket) => {
+  socket.on('operatorJoin', (e) => {
+    const userOnlineList = Array.from(users);
+    socket.join('operators');
+    socket.emit('updateUsers', userOnlineList);
+  });
+  socket.on('refereeJoin', (e) => {
+    users.add(JSON.stringify({ name: e, id: socket.id }));
+    const userOnlineList = Array.from(users);
+    socket.join('referees');
 
-      let list = [];
-      Object.keys(clients).forEach((element) => {
-        if (!element.startsWith('operator_'))
-          list.push({ id: element, name: clients[element].name });
-      });
-      ws.send(JSON.stringify({ type: 'clientList', list: list }));
-
-      // Object.keys(operator).forEach((item) => {
-      //   operator[item].ws.send(
-      //     JSON.stringify({
-      //       type: 'registerClient',
-      //       clientId: clientId,
-      //     })
-      //   );
-      // });
-    }
-    if (parsedMessage.type === 'startTimer') {
-      startCountdown(parsedMessage.user);
-    }
-    if (parsedMessage.type === 'pauseTimer') {
-      pauseCountDown(parsedMessage.user);
-    }
-    if (parsedMessage.type === 'operatorMessage') {
-      const message = parsedMessage.message;
-      sendMessageToClient(parsedMessage.user, message);
-    }
-    if (parsedMessage.type === 'stopTimer') {
-      console.log('stop count down' + parsedMessage.user);
-      stopCountdown(parsedMessage.user);
-    }
-    if (parsedMessage.type === 'setCountdown') {
-      const duration = parsedMessage.duration;
-      setCountdownForClient(parsedMessage.targetClient, duration);
-    }
+    io.to('operators').emit('updateUsers', userOnlineList);
   });
 
-  ws.on('close', () => {
-    if (clients[clientId]) {
-      stopCountdown(clientId);
-      delete clients[clientId];
+  socket.on('sendMessage', (e) => {
+    const targetSocketId = Array.from(users).find(
+      (item: string) => JSON.parse(item).id === e.id
+    );
+    if (targetSocketId) {
+      io.to(e.id).emit('operatorMessage', e.message);
+    }
+    // console.log(message);
+    // // Send a message to all referees in the "referees" room
+    // io.to(message.id).emit('messageToReferees', message);
+  });
+
+  const timerFunction = (id, action) => {
+    const targetSocketId = Array.from(users).find(
+      (item: string) => JSON.parse(item).id === id
+    );
+    if (targetSocketId) {
+      io.to(id).emit(action);
+    }
+  };
+  socket.on('startTimer', (id) => timerFunction(id, 'play'));
+  socket.on('pauseTimer', (id) => timerFunction(id, 'pause'));
+  socket.on('stopTimer', (id) => timerFunction(id, 'stop'));
+  socket.on('disconnect', async (e) => {
+    console.log('disconnect !', e);
+    const userToRemove = Array.from(users).find(
+      (user: string) => JSON.parse(user).id === socket.id
+    );
+
+    if (userToRemove) {
+      console.log('remove user !');
+      await users.delete(userToRemove);
+      const userOnlineList = await Array.from(users);
+      console.log(userOnlineList);
+      io.to('operators').emit('updateUsers', userOnlineList);
     }
   });
 });
 
 app.use(express.json());
-
+app.use(cors());
 server.listen(port, () => {
   console.log('Server is listening on port ' + port);
 });
-
-function generateClientId() {
-  return Math.random().toString(36).substr(2, 8);
-}
-// function pauseCountdown(clientId, duration) {
-//   clearInterval(clients[clientId].countdownInterval);
-// }
-function startCountdown(clientId) {
-  stopCountdown(clientId);
-  clients[clientId].ws.send(
-    JSON.stringify({
-      type: 'startTimer',
-    })
-  );
-  Object.keys(operator).forEach((item) => {
-    operator[item].ws.send(
-      JSON.stringify({
-        type: 'startTimer',
-        clientId,
-      })
-    );
-  });
-  // remainingTime++;
-  // } else {
-  //   clearInterval(countdownInterval);
-  // }
-  // }, 1000);
-
-  // clients[clientId].countdownInterval = countdownInterval;
-}
-
-function setCountdownForClient(clientId, duration) {
-  stopCountdown(clientId);
-  startCountdown(clientId);
-}
-
-function pauseCountDown(clientId) {
-  clients[clientId].ws.send(
-    JSON.stringify({
-      type: 'pauseTimer',
-    })
-  );
-  // if (clients[clientId].countdownInterval) {
-  //   clearInterval(clients[clientId].countdownInterval);
-  //   clients[clientId].countdownInterval = null;
-  // }
-}
-function stopCountdown(clientId) {
-  clients[clientId].ws.send(
-    JSON.stringify({
-      type: 'stopTimer',
-    })
-  );
-  // if (clients[clientId].countdownInterval) {
-  //   clearInterval(clients[clientId].countdownInterval);
-  //   clients[clientId].countdownInterval = null;
-  // }
-}
-
-function sendMessageToClient(targetClient, message) {
-  if (clients[targetClient]) {
-    clients[targetClient].ws.send(
-      JSON.stringify({
-        type: 'operatorMessage',
-        message: message,
-      })
-    );
-  }
-}

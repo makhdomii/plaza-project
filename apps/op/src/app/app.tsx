@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Container, AnswerBox } from '../components';
+import styles from './app.module.scss';
 import logo from '../assets/logo.png';
+import { useNavigate } from 'react-router-dom';
+import classNames from 'classnames';
+import Menu from './menu';
 
+// const ws = new WebSocket('ws://192.168.10.100:4000');
 const ws = new WebSocket('ws://192.168.10.100:4000');
-// const ws = new WebSocket('ws://localhost:4000');
 
 type LEDType = {
   num: number;
@@ -121,11 +125,16 @@ export function App() {
     console.log('open socket', event);
     ws.send("'type':'registerOperator'");
   };
+  // useEffect(() => {
+  //   return () => {
+  //     ws.close();
+  //   };
+  // }, []);
 
   ws.onmessage = (message) => {
     const msg = JSON.parse(message.data);
-    if (msg.type === 'syncRegisters') {
-    }
+    // if (msg.type === 'syncRegisters') {
+    // }
     if (msg.type === 'syncTotal') {
       console.log(msg);
       Object.keys(msg.refereeObj).forEach((item) => {
@@ -196,10 +205,20 @@ export function App() {
       reason =
         "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
     else reason = 'Unknown reason';
-    console.error('closed => ', reason);
+    console.error('closed => ', reason, event);
   };
   return (
     <>
+      <Menu>
+        <button
+          className=" w-full hover:bg-dark-400 hover:bg-opacity-75 py-6 text-[#fff]"
+          onClick={() => {
+            ws.send("'type':'resetContest'");
+          }}
+        >
+          شروع مسابقه جدید
+        </button>
+      </Menu>
       <div className="flex justify-center">
         <img src={logo} className="w-52" alt="" />
       </div>
@@ -438,7 +457,7 @@ export function App() {
           })}
         </div>
       </Container>
-      <div className="absolute right-0 top-0">
+      {/* <div className="absolute right-0 top-0">
         <button
           onClick={() => {
             ws.send("'type':'resetContest'");
@@ -447,7 +466,7 @@ export function App() {
         >
           شروع مسابقه جدید
         </button>
-      </div>
+      </div> */}
     </>
   );
 }

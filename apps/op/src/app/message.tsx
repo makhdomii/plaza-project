@@ -1,43 +1,44 @@
 import React, { FormEvent, useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 import logo from '../assets/logo.png';
-import playIc from '../assets/play.svg';
-import stopIc from '../assets/stop.svg';
-import TimerApp from './timer';
 import { ClientList } from './clientList';
-function OperatorApp() {
-  const ws = new WebSocket('ws://192.168.10.100:4040');
-  // const ws = new WebSocket('ws://localhost:4040');
-  const [clientDetail, setClientDetail] = useState({
-    remainingTime: '0',
-    clientId: '',
-  });
-  const [clientList, setClientList] = useState<[{ id: string; name: string }]>([
-    { name: '', id: '' },
-  ]);
 
+const MemoizedClientList = React.memo(ClientList);
+function OperatorApp() {
+  const [clientList, setClientList] = useState(new Set());
+  const [clientListArray, setClientListArray] = useState<
+    { clientId: string }[]
+  >([]);
+  const ws: Socket = io('http://192.168.10.100:4040');
+  let clientListLet: any = [];
   useEffect(() => {
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'registerOperator' }));
+    // Handle the 'connect' event
+    ws.on('connect', () => {
+      console.log('Socket.io connected');
+      ws.emit('registerOperator', 'hello world');
+      // ws.emit('registerOperator'); // Send the registration message
+    });
+    return () => {
+      // Clean up the socket connection when the component unmounts
+      ws.disconnect();
     };
-    ws.onmessage = (event) => {
-      console.log(event.data);
-      const parsed = JSON.parse(event.data);
-      if (parsed.type === 'clientList') {
-        const clients = parsed.list;
-        console.log(clients);
-        setClientList(clients);
-      }
-      if (parsed.type === 'countdown') {
-        setClientDetail({
-          clientId: parsed.clientId,
-          remainingTime: formatTime(Number(parsed.remainingTime)),
-        });
-      }
-    };
-    () => {
-      ws.close();
-    };
+  }, [ws]);
+
+  ws.on('registerClient', (message) => {
+    console.log('message ===>', message);
+    clientListLet = message;
+    setClientListArray(message);
   });
+  // Handle errors
+  ws.on('error', (error) => {
+    console.error('Socket.io error', error);
+  });
+
+  // Handle disconnection
+  ws.on('disconnect', () => {
+    console.log('Socket.io disconnected');
+  });
+
   const sendMessage = (e: FormEvent<EventTarget>) => {
     e.preventDefault();
     const { textBox, user } = e.currentTarget as HTMLFormElement;
@@ -46,31 +47,23 @@ function OperatorApp() {
       message: textBox.value,
       user: user.value,
     };
-    ws.send(JSON.stringify(messageObj));
+    ws?.emit('sendMessage', messageObj);
     textBox.value = '';
   };
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
 
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-
-    return `${formattedMinutes}:${formattedSeconds}`;
-  };
   const pauseCountdown = (id: string) => {
     const countdownObj = {
       type: 'pauseTimer',
       user: id,
     };
-    ws.send(JSON.stringify(countdownObj));
+    ws?.emit('sendMessage', countdownObj);
   };
   const startCountdown = (id: string) => {
     const countdownObj = {
       type: 'startTimer',
       user: id,
     };
-    ws.send(JSON.stringify(countdownObj));
+    ws?.emit('sendMessage', countdownObj);
   };
 
   const stopCountdown = (id: string) => {
@@ -79,25 +72,17 @@ function OperatorApp() {
       user: id,
     };
     console.log('stop count down from operator', countdownObj);
-    ws.send(JSON.stringify(countdownObj));
+    ws?.emit('sendMessage', countdownObj);
   };
-  console.log('clients ===> ', clientDetail);
+  console.log('client list array ====>', clientListArray);
+  console.log('client let array ====>', clientListLet);
   return (
     <div className="text-right flex">
       <div className="w-1/4 bg-[#017338] h-screen flex flex-col justify-center">
-        <div className="text-center">
-          <button
-            className="bg-[#fff] py-4 px-8 rounded-lg"
-            onClick={() => {
-              ws.send(JSON.stringify({ type: 'clientList' }));
-            }}
-          >
-            نمایش لیست داوران
-          </button>
-        </div>
-        {clientList.map((item, index) => {
+        {clientListArray.map((item: any, index) => {
+          console.log('client list ===>', item);
           return (
-            <ClientList
+            <MemoizedClientList
               key={'client_list' + index}
               data={item}
               stopCountdown={stopCountdown}
@@ -106,12 +91,23 @@ function OperatorApp() {
             />
           );
         })}
+        {/* {Array.from(clientList).map((item: any, index: any) => {
+          return (
+            <MemoizedClientList
+              key={'client_list' + index}
+              data={item}
+              stopCountdown={stopCountdown}
+              pauseCountdown={pauseCountdown}
+              startCountdown={startCountdown}
+            />
+          );
+        })} */}
       </div>
 
       <div className="w-3/4">
         <div className="flex justify-center items-center h-screen">
           <form className="max-w-3xl w-full" onSubmit={sendMessage}>
-            <img src={logo} className="w-60 mx-auto" />
+            <img src={logo} className="w-60 mx-auto" alt="" />
             <div className="pb-10">
               <label className="w-full">
                 کاربر مورد نظر خود را انتخاب کنید
@@ -120,7 +116,7 @@ function OperatorApp() {
                 className="w-full text-right border border-[#017338] py-3 px-8 rounded-lg"
                 name="user"
               >
-                {clientList.map((item, index) => {
+                {Array.from(clientList).map((item: any, index: any) => {
                   return (
                     <option
                       key={'message_client_list_' + index}
@@ -150,4 +146,4 @@ function OperatorApp() {
   );
 }
 
-export default OperatorApp;
+export default React.memo(OperatorApp);

@@ -4,7 +4,7 @@ import stopIc from '../assets/stop.svg';
 import { useState } from 'react';
 
 type ClientListType = {
-  data: { id: string; name: string };
+  data: any;
   pauseCountdown: (id: string) => void;
   startCountdown: (id: string) => void;
   stopCountdown: (id: string) => void;
@@ -46,7 +46,7 @@ export const ClientList = ({
               startCountdown(data.id);
             }}
           >
-            <img src={playIc} className="w-5" />
+            <img src={playIc} className="w-5" alt="" />
           </button>
           <button
             className=" rounded-3xl bg-[#fbb017] text-emerald-50 p-2"
@@ -56,7 +56,7 @@ export const ClientList = ({
               stopCountdown(data.id);
             }}
           >
-            <img src={stopIc} className="w-5" />
+            <img src={stopIc} className="w-5" alt="" />
           </button>
         </div>
       </div>
