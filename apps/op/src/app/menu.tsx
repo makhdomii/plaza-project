@@ -35,7 +35,7 @@ export default function Menu({ children, chat = false }: MenuType) {
       </div>
       <div className={classNames('bg-dark-600 h-full', styles['menu-content'])}>
         <ul>
-          <li>
+          {/* <li>
             {!chat && (
               <button
                 className=" w-full hover:bg-dark-400 hover:bg-opacity-75 py-6 text-[#fff]"
@@ -56,7 +56,7 @@ export default function Menu({ children, chat = false }: MenuType) {
                 صفحه کنترل
               </button>
             )}
-          </li>
+          </li> */}
           <li>{children}</li>
         </ul>
       </div>
