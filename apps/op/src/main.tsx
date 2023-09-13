@@ -8,6 +8,7 @@ import Message from './app/message';
 import Client from './app/client';
 import LCD from './app/lcd';
 import Chat from './app/chat';
+import { Wall } from './app/wall';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -30,6 +31,7 @@ root.render(
         {/* </Routes>
       <Routes> */}
         <Route Component={LCD} path="lcd" />
+        <Route Component={Wall} path="wall" />
       </Routes>
     </BrowserRouter>
   </StrictMode>
