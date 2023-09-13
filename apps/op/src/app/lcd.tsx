@@ -71,11 +71,11 @@ export function LCD() {
       downloadRefereeCoin();
     }
   }, [load]);
-  useEffect(() => {
-    return () => {
-      ws.close();
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     ws.close();
+  //   };
+  // }, []);
   ws.onopen = (event) => {
     console.log('open socket', event);
     ws.send("'type':'registerOperator'");
